@@ -12,10 +12,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: `${plans('title')} — Hearthline`, description: meta('description') };
 }
 
-export default function PricingPage() {
+export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   return (
     <>
-      <Pricing />
+      <Pricing locale={locale} />
       <ScrollFx />
     </>
   );

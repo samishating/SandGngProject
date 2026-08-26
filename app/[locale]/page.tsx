@@ -31,7 +31,9 @@ export default async function MarketingPage() {
       <HowItWorks />
       <About />
 
-      <section className="section cta-section" aria-label="Request a call back">
+      {/* id is the target the pricing CTAs link to now that there is no
+          online checkout — every plan button lands here. */}
+      <section className="section cta-section" id="callback" aria-label="Request a call back">
         <div className="container">
           <span className="cta-orb cta-orb-a" aria-hidden="true"></span>
           <span className="cta-orb cta-orb-b" aria-hidden="true"></span>
