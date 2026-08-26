@@ -146,21 +146,11 @@
     "billingYearly": "Jaarlijks betalen (bespaar {percent}%)",
     "yearlyPeriod": " / jaar",
     "billedAnnually": "Eenmaal per jaar gefactureerd",
-    "oneOffKicker": "Eenmalig",
-    "oneOffBody": "Eén sessie met een technicus, diagnose inbegrepen. Kunnen we het niet repareren, dan betaalt u niets.",
-    "oneOffCta": "Aan de slag",
-    "householdKicker": "Huishouden",
-    "householdBadge": "Meest gekozen",
     "householdPeriod": " / maand",
-    "householdBody": "Onbeperkte sessies voor elke computer in huis, twee keer per jaar gepland onderhoud, voorrang bij beantwoording.",
-    "householdCta": "Aan de slag",
-    "familyKicker": "Familie & senioren",
-    "familyPeriod": " / maand",
-    "familyBody": "Alles uit Huishouden, voor twee adressen, met een vaste technicus die uw situatie kent.",
-    "familyCta": "Aan de slag",
     "oneOffPeriod": " / sessie",
     "oneOffNote": "Eenmalige betaling, geen abonnement",
-    "billedMonthly": "Maandelijks gefactureerd, altijd opzegbaar"
+    "billedMonthly": "Maandelijks gefactureerd, altijd opzegbaar",
+    "cta": "Aan de slag"
   },
   "cta": {
     "title": "Begin met de gratis diagnose",

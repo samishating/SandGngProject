@@ -146,21 +146,11 @@
     "billingYearly": "Pago anual (ahorra {percent}%)",
     "yearlyPeriod": " / año",
     "billedAnnually": "Facturado una vez al año",
-    "oneOffKicker": "Puntual",
-    "oneOffBody": "Una sola sesión con un técnico, diagnóstico incluido. Si no podemos repararlo, no pagas nada.",
-    "oneOffCta": "Empezar",
-    "householdKicker": "Hogar",
-    "householdBadge": "El más elegido",
     "householdPeriod": " / mes",
-    "householdBody": "Sesiones ilimitadas para cada ordenador del hogar, mantenimiento programado dos veces al año, atención prioritaria.",
-    "householdCta": "Empezar",
-    "familyKicker": "Familia y mayores",
-    "familyPeriod": " / mes",
-    "familyBody": "Todo lo incluido en Hogar, en dos direcciones, con un técnico asignado que conoce tu equipo.",
-    "familyCta": "Empezar",
     "oneOffPeriod": " / sesión",
     "oneOffNote": "Pago único, sin suscripción",
-    "billedMonthly": "Facturado cada mes, cancele cuando quiera"
+    "billedMonthly": "Facturado cada mes, cancele cuando quiera",
+    "cta": "Empezar"
   },
   "cta": {
     "title": "Empieza con el diagnóstico gratuito",

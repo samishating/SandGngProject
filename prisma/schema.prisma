@@ -101,11 +101,35 @@ model ReferralTag {
 /// The plan set itself is seeded from code; its USD prices are admin-editable
 /// at /admin/plans (see PlanPrice), as are commission rules.
 model Plan {
-  id          String   @id @default(cuid())
-  key         String   @unique // "one-off" | "household" | "family-elders"
+  id          String  @id @default(cuid())
+  key         String  @unique // url-safe slug, used as ?plan= at checkout
   name        String
   isRecurring Boolean
-  createdAt   DateTime @default(now())
+
+  /// The card body on the pricing page. Admin-editable, which is the point:
+  /// adding an offer or reworking its wording shouldn't need a deploy.
+  description String?
+
+  /// Small pill on the card, e.g. "Most popular". Blank means no pill.
+  badge String?
+
+  /// Per-locale overrides, shaped { "fr": { "name": "...", "description":
+  /// "...", "badge": "..." } }. Any locale or field left out falls back to the
+  /// columns above, so a new plan is publishable in one language and can be
+  /// translated later without ever rendering an empty card.
+  translations Json?
+
+  /// Draws the highlighted treatment. Only the first active one wins, so
+  /// turning it on for a new plan quietly demotes the old one.
+  isFeatured Boolean @default(false)
+
+  /// Retire an offer without deleting it — existing sales still reference the
+  /// plan, so removing the row outright would break their history.
+  isActive Boolean @default(true)
+
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   prices          PlanPrice[]
   commissionRules CommissionRule[]

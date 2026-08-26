@@ -146,21 +146,11 @@
     "billingYearly": "Paiement annuel (économisez {percent}%)",
     "yearlyPeriod": " / an",
     "billedAnnually": "Facturé une fois par an",
-    "oneOffKicker": "À l'unité",
-    "oneOffBody": "Une session unique avec un technicien, diagnostic inclus. Si nous ne pouvons pas réparer, vous ne payez rien.",
-    "oneOffCta": "Commencer",
-    "householdKicker": "Foyer",
-    "householdBadge": "La plus choisie",
     "householdPeriod": " / mois",
-    "householdBody": "Sessions illimitées pour chaque ordinateur du foyer, entretien programmé deux fois par an, réponse prioritaire.",
-    "householdCta": "Commencer",
-    "familyKicker": "Famille et aînés",
-    "familyPeriod": " / mois",
-    "familyBody": "Tout ce qui est inclus dans Foyer, sur deux adresses, avec un technicien attitré qui connaît votre installation.",
-    "familyCta": "Commencer",
     "oneOffPeriod": " / session",
     "oneOffNote": "Paiement unique, sans abonnement",
-    "billedMonthly": "Facturé chaque mois, annulable à tout moment"
+    "billedMonthly": "Facturé chaque mois, annulable à tout moment",
+    "cta": "Commencer"
   },
   "cta": {
     "title": "Commencez par le diagnostic gratuit",

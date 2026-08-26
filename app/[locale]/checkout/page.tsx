@@ -42,11 +42,9 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
   const priced = pricing.plans[plan.key]?.[interval];
   if (!priced) notFound();
 
-  const planName = {
-    'one-off': plans('oneOffKicker'),
-    household: plans('householdKicker'),
-    'family-elders': plans('familyKicker'),
-  }[plan.key] ?? plan.name;
+  // The name comes from the plan row (localized in getPricing), so a plan the
+  // admin adds shows up here without any change to this file.
+  const planName = pricing.list.find(p => p.key === plan.key)?.name ?? plan.name;
 
   const periodLabel =
     interval === 'one_time' ? plans('oneOffPeriod') : interval === 'year' ? plans('yearlyPeriod') : plans('householdPeriod');

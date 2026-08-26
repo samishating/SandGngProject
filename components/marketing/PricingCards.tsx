@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import type { PricingData } from '@/lib/pricing';
+import type { PricedPlan, PricingData } from '@/lib/pricing';
 
 type Interval = 'month' | 'year';
 
@@ -13,81 +13,90 @@ type Interval = 'month' | 'year';
  * so switching billing period is instant and no rate maths ships to the
  * browser.
  *
+ * Cards are generated from the plans in the database rather than written out
+ * one by one — adding an offer or reworking its wording is an edit at
+ * /admin/plans, not a code change plus five locale files.
+ *
  * Each CTA carries the chosen plan and billing period into /checkout, which
- * books the order — there is no payment step, a technician calls back to
- * arrange it.
+ * books the order; there is no payment step, a technician calls back.
  */
 export default function PricingCards({ pricing }: { pricing: PricingData }) {
   const t = useTranslations('plans');
   const [interval, setInterval] = useState<Interval>('month');
 
-  const oneOff = pricing.plans['one-off']?.one_time;
-  const household = pricing.plans.household?.[interval];
-  const family = pricing.plans['family-elders']?.[interval];
+  // Only meaningful if something on the page actually has both.
+  const anyRecurring = pricing.list.some(p => p.isRecurring && p.prices.year && p.prices.month);
 
   return (
     <>
-      <div className="reveal-item billing-toggle">
-        <div className="seg" role="radiogroup" aria-label="Billing period">
-          <label className="seg-opt">
-            <input type="radio" name="interval" checked={interval === 'month'} onChange={() => setInterval('month')} />
-            {t('billingMonthly')}
-          </label>
-          <label className="seg-opt">
-            <input type="radio" name="interval" checked={interval === 'year'} onChange={() => setInterval('year')} />
-            {t('billingYearly', { percent: pricing.householdSavings })}
-          </label>
+      {anyRecurring && (
+        <div className="reveal-item billing-toggle">
+          <div className="seg" role="radiogroup" aria-label="Billing period">
+            <label className="seg-opt">
+              <input type="radio" name="interval" checked={interval === 'month'} onChange={() => setInterval('month')} />
+              {t('billingMonthly')}
+            </label>
+            <label className="seg-opt">
+              <input type="radio" name="interval" checked={interval === 'year'} onChange={() => setInterval('year')} />
+              {t('billingYearly', { percent: pricing.householdSavings })}
+            </label>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="reveal-group grid-plans">
-        {/* The one-off plan has no billing interval, so the toggle above
-            doesn't apply to it. It still renders a period suffix and a note
-            line so the three cards keep the same vertical rhythm at either
-            toggle state, and so "no subscription" is stated rather than left
-            to be inferred from a missing "/ month". */}
-        <div className="card elev-sm plan-card">
-          <span className="card-kicker">{t('oneOffKicker')}</span>
-          <span className="plan-price">
-            {oneOff?.display}
-            <span className="plan-period">{t('oneOffPeriod')}</span>
-          </span>
-          <span className="plan-note">{t('oneOffNote')}</span>
-          <span className="card-body">{t('oneOffBody')}</span>
-          <Link className="btn btn-secondary btn-block" href="/checkout?plan=one-off">
-            {t('oneOffCta')}
-          </Link>
-        </div>
-
-        <div className="card elev-md plan-card plan-card-featured">
-          <span className="plan-card-head">
-            <span className="card-kicker plan-kicker-featured">{t('householdKicker')}</span>
-            <span className="tag tag-accent-2 tag-featured">{t('householdBadge')}</span>
-          </span>
-          <span className="plan-price">
-            {household?.display}
-            <span className="plan-period">{interval === 'month' ? t('householdPeriod') : t('yearlyPeriod')}</span>
-          </span>
-          <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
-          <span className="card-body">{t('householdBody')}</span>
-          <Link className="btn btn-primary btn-block" href={`/checkout?plan=household&interval=${interval}`}>
-            {t('householdCta')}
-          </Link>
-        </div>
-
-        <div className="card elev-sm plan-card">
-          <span className="card-kicker">{t('familyKicker')}</span>
-          <span className="plan-price">
-            {family?.display}
-            <span className="plan-period">{interval === 'month' ? t('familyPeriod') : t('yearlyPeriod')}</span>
-          </span>
-          <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
-          <span className="card-body">{t('familyBody')}</span>
-          <Link className="btn btn-secondary btn-block" href={`/checkout?plan=family-elders&interval=${interval}`}>
-            {t('familyCta')}
-          </Link>
-        </div>
+        {pricing.list.map(plan => (
+          <PlanCard key={plan.key} plan={plan} interval={interval} />
+        ))}
       </div>
     </>
+  );
+}
+
+function PlanCard({ plan, interval }: { plan: PricedPlan; interval: Interval }) {
+  const t = useTranslations('plans');
+
+  // A one-off has a single price and ignores the toggle entirely. A recurring
+  // plan that only has one of the two intervals falls back to whichever exists,
+  // so a half-configured plan still shows a price rather than a gap.
+  const resolved = plan.isRecurring
+    ? (plan.prices[interval] ?? plan.prices.month ?? plan.prices.year)
+    : (plan.prices.one_time ?? Object.values(plan.prices)[0]);
+  if (!resolved) return null;
+
+  const activeInterval = plan.isRecurring ? (plan.prices[interval] ? interval : plan.prices.month ? 'month' : 'year') : 'one_time';
+
+  const period =
+    activeInterval === 'one_time' ? t('oneOffPeriod') : activeInterval === 'year' ? t('yearlyPeriod') : t('householdPeriod');
+  const note =
+    activeInterval === 'one_time' ? t('oneOffNote') : activeInterval === 'year' ? t('billedAnnually') : t('billedMonthly');
+
+  const href = plan.isRecurring ? `/checkout?plan=${plan.key}&interval=${activeInterval}` : `/checkout?plan=${plan.key}`;
+
+  return (
+    <div className={`card plan-card ${plan.isFeatured ? 'elev-md plan-card-featured' : 'elev-sm'}`}>
+      {plan.badge ? (
+        <span className="plan-card-head">
+          <span className={`card-kicker ${plan.isFeatured ? 'plan-kicker-featured' : ''}`}>{plan.name}</span>
+          <span className="tag tag-accent-2 tag-featured">{plan.badge}</span>
+        </span>
+      ) : (
+        <span className="card-kicker">{plan.name}</span>
+      )}
+
+      <span className="plan-price">
+        {resolved.display}
+        {/* Period and note keep the three cards on the same vertical rhythm at
+            either toggle state, and state "no subscription" rather than
+            leaving it to be inferred from a missing "/ month". */}
+        <span className="plan-period">{period}</span>
+      </span>
+      <span className="plan-note">{note}</span>
+      {plan.description && <span className="card-body">{plan.description}</span>}
+
+      <Link className={`btn btn-block ${plan.isFeatured ? 'btn-primary' : 'btn-secondary'}`} href={href}>
+        {t('cta')}
+      </Link>
+    </div>
   );
 }

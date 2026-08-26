@@ -1,34 +1,67 @@
 import { prisma } from '@/lib/prisma';
 import { getRates } from '@/lib/exchange-rates';
 import { convertFromUsd, formatMoney } from '@/lib/currency';
-import PlanPriceForm from '@/components/admin/PlanPriceForm';
+import { routing } from '@/i18n/routing';
+import PlanEditor, { type PlanEditorPlan } from '@/components/admin/PlanEditor';
+import NewPlanForm from '@/components/admin/NewPlanForm';
 
-// Prices and rates both change out of band, so never serve this from cache.
+// Prices, rates and plan copy all change out of band.
 export const dynamic = 'force-dynamic';
 
-const INTERVAL_LABELS: Record<string, string> = {
-  one_time: 'Per session',
-  month: 'Monthly',
-  year: 'Yearly',
-};
+const INTERVAL_ORDER = ['one_time', 'month', 'year'];
 
 export default async function AdminPlansPage() {
-  const [plans, rates] = await Promise.all([
-    prisma.plan.findMany({ include: { prices: true }, orderBy: { key: 'asc' } }),
+  const [plans, rates, rateRows] = await Promise.all([
+    prisma.plan.findMany({
+      include: { prices: true, _count: { select: { sales: true } } },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    }),
     getRates(),
+    prisma.exchangeRate.findMany({ orderBy: { currency: 'asc' } }),
   ]);
 
-  const rateRows = await prisma.exchangeRate.findMany({ orderBy: { currency: 'asc' } });
   const lastRefreshed = rateRows[0];
+
+  const editorPlans: PlanEditorPlan[] = plans.map(plan => ({
+    id: plan.id,
+    key: plan.key,
+    name: plan.name,
+    description: plan.description,
+    badge: plan.badge,
+    isRecurring: plan.isRecurring,
+    isFeatured: plan.isFeatured,
+    isActive: plan.isActive,
+    sortOrder: plan.sortOrder,
+    translations: (plan.translations as Record<string, Record<string, string>> | null) ?? {},
+    saleCount: plan._count.sales,
+    prices: plan.prices
+      .slice()
+      .sort((a, b) => INTERVAL_ORDER.indexOf(a.interval) - INTERVAL_ORDER.indexOf(b.interval))
+      .map(price => ({
+        id: price.id,
+        interval: price.interval,
+        amountUsd: price.amountUsd,
+        eur: formatMoney(convertFromUsd(price.amountUsd, 'eur', rates.eur), 'eur', 'en'),
+        gbp: formatMoney(convertFromUsd(price.amountUsd, 'gbp', rates.gbp), 'gbp', 'en'),
+      })),
+  }));
+
+  // The base columns hold the default locale, so only the others are editable
+  // as overrides.
+  const translatableLocales = routing.locales.filter(l => l !== routing.defaultLocale);
 
   return (
     <>
-      <h1>Prices</h1>
-      <p className="card-body" style={{ maxWidth: 640 }}>
-        Set every price in US dollars. Euro and pound figures are converted from
-        the daily exchange rate and rounded to a whole unit — they update on
-        their own and can&apos;t be edited directly.
-      </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <h1>Plans</h1>
+          <p className="card-body" style={{ maxWidth: 640 }}>
+            Everything on the pricing page comes from here — wording, order, and price. Set prices in US dollars; euro and
+            pound figures are converted from the daily rate and rounded to a whole unit.
+          </p>
+        </div>
+        <NewPlanForm />
+      </div>
 
       <div className="card elev-sm" style={{ padding: 20, margin: '24px 0' }}>
         <span className="card-kicker">Exchange rates</span>
@@ -47,36 +80,11 @@ export default async function AdminPlansPage() {
         </span>
       </div>
 
-      {plans.map(plan => (
-        <div key={plan.id} className="card elev-sm" style={{ padding: 20, marginBottom: 20 }}>
-          <span className="card-title">{plan.name}</span>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 12 }}>
-            <thead>
-              <tr style={{ textAlign: 'left' }}>
-                <th style={{ padding: '8px 0' }}>Billing</th>
-                <th style={{ padding: '8px 0' }}>Price (USD)</th>
-                <th style={{ padding: '8px 0' }}>Euro</th>
-                <th style={{ padding: '8px 0' }}>Pound</th>
-              </tr>
-            </thead>
-            <tbody>
-              {plan.prices
-                .slice()
-                .sort((a, b) => a.interval.localeCompare(b.interval))
-                .map(price => (
-                  <tr key={price.id}>
-                    <td style={{ padding: '8px 0' }}>{INTERVAL_LABELS[price.interval] ?? price.interval}</td>
-                    <td style={{ padding: '8px 0' }}>
-                      <PlanPriceForm priceId={price.id} amountUsd={price.amountUsd} />
-                    </td>
-                    <td style={{ padding: '8px 0' }}>{formatMoney(convertFromUsd(price.amountUsd, 'eur', rates.eur), 'eur', 'en')}</td>
-                    <td style={{ padding: '8px 0' }}>{formatMoney(convertFromUsd(price.amountUsd, 'gbp', rates.gbp), 'gbp', 'en')}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+      {editorPlans.length === 0 ? (
+        <p className="card-body">No plans yet — add one to get the pricing page working.</p>
+      ) : (
+        editorPlans.map(plan => <PlanEditor key={plan.id} plan={plan} locales={translatableLocales} />)
+      )}
     </>
   );
 }

@@ -146,21 +146,11 @@
     "billingYearly": "Jährlich zahlen (sparen Sie {percent}%)",
     "yearlyPeriod": " / Jahr",
     "billedAnnually": "Einmal jährlich abgerechnet",
-    "oneOffKicker": "Einmalig",
-    "oneOffBody": "Eine einzelne Sitzung mit einem Techniker, Diagnose inklusive. Können wir es nicht reparieren, zahlen Sie nichts.",
-    "oneOffCta": "Loslegen",
-    "householdKicker": "Haushalt",
-    "householdBadge": "Meistgewählt",
     "householdPeriod": " / Monat",
-    "householdBody": "Unbegrenzte Sitzungen für jeden Computer im Haushalt, zweimal jährlich geplante Wartung, bevorzugte Bearbeitung.",
-    "householdCta": "Loslegen",
-    "familyKicker": "Familie & Senioren",
-    "familyPeriod": " / Monat",
-    "familyBody": "Alles aus Haushalt, für zwei Adressen, mit einem festen Techniker, der Ihre Einrichtung kennt.",
-    "familyCta": "Loslegen",
     "oneOffPeriod": " / Sitzung",
     "oneOffNote": "Einmalzahlung, kein Abo",
-    "billedMonthly": "Monatlich abgerechnet, jederzeit kündbar"
+    "billedMonthly": "Monatlich abgerechnet, jederzeit kündbar",
+    "cta": "Loslegen"
   },
   "cta": {
     "title": "Starten Sie mit der kostenlosen Diagnose",

@@ -52,23 +52,62 @@ export interface PlanPricing {
   amountUsd: number;
 }
 
+export interface PricedPlan {
+  key: string;
+  name: string;
+  description: string | null;
+  badge: string | null;
+  isRecurring: boolean;
+  isFeatured: boolean;
+  /** interval -> pricing, already converted and formatted. */
+  prices: Record<string, PlanPricing>;
+}
+
 export interface PricingData {
   currency: Currency;
-  /** planKey -> interval -> pricing */
+  /** Display order, active plans only. */
+  list: PricedPlan[];
+  /** planKey -> interval -> pricing. Kept for lookups by key. */
   plans: Record<string, Record<string, PlanPricing>>;
   /** How much cheaper a year is than 12 months, as a whole percent. */
   householdSavings: number;
+}
+
+/**
+ * Plan copy is stored in English on the row, with other locales in a
+ * `translations` JSON blob. A missing locale or a missing field falls back to
+ * the column, so a plan added in one language still renders everywhere rather
+ * than showing a blank card.
+ */
+function localizePlan(
+  plan: { name: string; description: string | null; badge: string | null; translations: unknown },
+  locale: string,
+): { name: string; description: string | null; badge: string | null } {
+  const all = plan.translations as Record<string, Record<string, string>> | null | undefined;
+  const t = all?.[locale];
+  return {
+    name: t?.name?.trim() || plan.name,
+    description: t?.description?.trim() || plan.description,
+    badge: t?.badge?.trim() || plan.badge,
+  };
 }
 
 export async function getPricing(locale: string): Promise<PricingData> {
   const [currency, rates, planRows] = await Promise.all([
     resolveCurrency(locale),
     getRates(),
-    prisma.plan.findMany({ include: { prices: true } }),
+    prisma.plan.findMany({
+      // Retired plans stay in the table so existing sales keep their history,
+      // but must never reach the pricing page.
+      where: { isActive: true },
+      include: { prices: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+    }),
   ]);
 
   const rate = rates[currency];
   const plans: PricingData['plans'] = {};
+  const list: PricedPlan[] = [];
 
   for (const plan of planRows) {
     const byInterval: Record<string, PlanPricing> = {};
@@ -81,6 +120,21 @@ export async function getPricing(locale: string): Promise<PricingData> {
       };
     }
     plans[plan.key] = byInterval;
+
+    // A plan with no price yet would render a card with a blank where the
+    // money goes, so it stays off the page until one is set.
+    if (Object.keys(byInterval).length === 0) continue;
+
+    const copy = localizePlan(plan, locale);
+    list.push({
+      key: plan.key,
+      name: copy.name,
+      description: copy.description,
+      badge: copy.badge,
+      isRecurring: plan.isRecurring,
+      isFeatured: plan.isFeatured,
+      prices: byInterval,
+    });
   }
 
   // Computed from the USD figures, not the converted ones: rounding to whole
@@ -90,5 +144,5 @@ export async function getPricing(locale: string): Promise<PricingData> {
   const yearUsd = household.year?.amountUsd ?? 0;
   const householdSavings = monthUsd > 0 && yearUsd > 0 ? Math.round((1 - yearUsd / (monthUsd * 12)) * 100) : 0;
 
-  return { currency, plans, householdSavings };
+  return { currency, list, plans, householdSavings };
 }

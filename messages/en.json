@@ -146,21 +146,11 @@
     "billingYearly": "Pay yearly (save {percent}%)",
     "yearlyPeriod": " / year",
     "billedAnnually": "Billed once yearly",
-    "oneOffKicker": "One-off",
-    "oneOffBody": "A single session with a technician, diagnostic included. If we cannot fix it, you pay nothing.",
-    "oneOffCta": "Get started",
-    "householdKicker": "Household",
-    "householdBadge": "Most chosen",
     "householdPeriod": " / month",
-    "householdBody": "Unlimited sessions for every computer in the house, scheduled maintenance twice a year, priority answer.",
-    "householdCta": "Get started",
-    "familyKicker": "Family & elders",
-    "familyPeriod": " / month",
-    "familyBody": "Everything in Household across two addresses, with a named technician who knows your setup.",
-    "familyCta": "Get started",
     "oneOffPeriod": " / session",
     "oneOffNote": "One-time payment, no subscription",
-    "billedMonthly": "Billed monthly, cancel anytime"
+    "billedMonthly": "Billed monthly, cancel anytime",
+    "cta": "Get started"
   },
   "cta": {
     "title": "Start with the free diagnostic",
