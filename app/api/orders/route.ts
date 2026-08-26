@@ -59,6 +59,10 @@ export async function POST(req: Request) {
       data: {
         reference,
         planId: plan.id,
+        // Recorded so the subscription's end date can be worked out when an
+        // agent marks it sold — the plan alone doesn't say which term was
+        // bought.
+        interval,
         referralTagId: referral?.referralTagId ?? null,
         salespersonId: referral?.salespersonId ?? null,
         currency: pricing.currency,
@@ -71,6 +75,9 @@ export async function POST(req: Request) {
         status: 'AWAITING_CALLBACK',
         customerName: name,
         customerPhone: phone,
+        // Digits kept alongside so the account finder can match a number
+        // however either side formatted it.
+        customerPhoneDigits: phone.replace(/\D/g, '') || null,
         customerEmail: email,
         note: note || null,
         mode: plan.isRecurring ? 'SUBSCRIPTION' : 'PAYMENT',

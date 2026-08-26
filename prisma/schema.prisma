@@ -206,6 +206,18 @@ model Sale {
   planId        String
   currency      String
 
+  /// Which price was bought: "one_time", "month" or "year". Needed to work out
+  /// when a subscription runs to — the plan alone doesn't say, since a
+  /// recurring plan sells at either interval.
+  interval String @default("month")
+
+  /// The subscription's current term. Both null until an agent marks the
+  /// callback Sold, because nothing is running while the order is still a
+  /// lead. periodEnd is what the account finder shows as the renewal date;
+  /// a renewal moves the window forward rather than adding a second Sale.
+  periodStart DateTime?
+  periodEnd   DateTime?
+
   provider SaleProvider @default(MANUAL)
   approval SaleApproval @default(APPROVED)
 
@@ -221,7 +233,14 @@ model Sale {
   customerName  String?
   customerEmail String?
   customerPhone String?
-  note          String?
+
+  /// customerPhone with everything but the digits stripped. Stored rather than
+  /// computed at query time because an agent types "555 010 2030" while the
+  /// customer entered "+1 (555) 010-2030" — matching those needs a normalised
+  /// column the index can actually use.
+  customerPhoneDigits String?
+
+  note String?
 
   /// Stamped when an agent marks the callback done, so the queue can show how
   /// long someone has been waiting and who has already been dealt with.
@@ -246,6 +265,12 @@ model Sale {
   @@index([referralTagId])
   // Drives the "waiting for callback" queue each agent opens from their nav.
   @@index([salespersonId, status])
+  // The account finder searches on these; without them every lookup is a
+  // full scan of the sales table.
+  @@index([customerEmail])
+  @@index([customerPhoneDigits])
+  // Monthly earnings views filter by when the sale landed.
+  @@index([salespersonId, createdAt])
 }
 
 model CommissionEvent {

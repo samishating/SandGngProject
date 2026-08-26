@@ -24,10 +24,12 @@ export default function DashboardNav({ waitingCount }: { waitingCount: number })
         <nav className="nav-links" aria-label="Dashboard">
           <Link href="/dashboard">Your sales</Link>
           <Link href="/dashboard/links">Your links</Link>
-          <Link href="/dashboard/callbacks">
-            Callbacks
+          {/* The finder doubles as the callback queue when nothing is typed,
+              so the badge still shows how many people are waiting. */}
+          <Link href="/dashboard/accounts">
+            Account finder
             {waitingCount > 0 && (
-              <span className="nav-badge" aria-label={`${waitingCount} waiting`}>
+              <span className="nav-badge" aria-label={`${waitingCount} awaiting a callback`}>
                 {waitingCount}
               </span>
             )}

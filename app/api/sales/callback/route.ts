@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@/lib/prisma';
+import { periodEndFor } from '@/lib/billing-period';
 
 // What an agent can move a waiting order to. Refunds are deliberately absent:
 // nothing has been charged yet at this point in the flow.
@@ -43,10 +44,26 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'That order has already been dealt with' }, { status: 409 });
   }
 
+  const now = new Date();
+
+  // The subscription term starts when the sale is actually made, not when the
+  // order was placed — a lead that sat in the queue for three days shouldn't
+  // lose three days of what the customer paid for.
+  const startsNow = status === 'ACTIVE';
+  const periodStart = startsNow ? now : null;
+  const periodEnd = startsNow ? periodEndFor(now, sale.interval) : null;
+
   const updated = await prisma.sale.update({
     where: { id: saleId },
-    data: { status: status as 'ACTIVE' | 'CANCELED', calledBackAt: new Date() },
+    data: {
+      status: status as 'ACTIVE' | 'CANCELED',
+      calledBackAt: now,
+      periodStart,
+      periodEnd,
+    },
   });
 
-  return NextResponse.json({ sale: { id: updated.id, status: updated.status } });
+  return NextResponse.json({
+    sale: { id: updated.id, status: updated.status, periodEnd: updated.periodEnd },
+  });
 }
