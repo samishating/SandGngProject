@@ -72,7 +72,13 @@
     "softwareBody": "Installations, activations et les cas délicats — DLL manquantes, conflits de licence, mises à jour échouées.",
     "deviceStripAlt": "Ordinateur portable, imprimante, routeur et accessoires posés ensemble",
     "deviceStripTitle": "Si ça se branche, on s'en occupe probablement",
-    "deviceStripBody": "Ordinateurs portables et de bureau, imprimantes et scanners, routeurs et Wi-Fi maillé, moniteurs, webcams, disques externes. Un technicien, tous les appareils de la maison, une seule visite."
+    "deviceStripBody": "Ordinateurs portables et de bureau, imprimantes et scanners, routeurs et Wi-Fi maillé, moniteurs, webcams, disques externes. Un technicien, tous les appareils de la maison, une seule visite.",
+    "group1Title": "Lui redonner un coup de neuf",
+    "group1Body": "Les lenteurs, blocages et plantages du quotidien qui font paraître dépassée une machine encore bonne.",
+    "group2Title": "Le garder en sécurité",
+    "group2Body": "Une protection qui reste vraiment active, et une copie de tout ce qui compte si le pire arrive.",
+    "group3Title": "Tout mettre en place",
+    "group3Body": "Les appareils, les connexions et les installations qui ne se sont jamais tout à fait passées comme prévu."
   },
   "fixScrub": {
     "kicker": "Sous vos yeux",

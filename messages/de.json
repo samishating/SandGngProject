@@ -72,7 +72,13 @@
     "softwareBody": "Installationen, Aktivierungen und die kniffligen Fälle — fehlende DLLs, Lizenzkonflikte, fehlgeschlagene Updates.",
     "deviceStripAlt": "Laptop, Drucker, Router und Zubehör zusammen aufgestellt",
     "deviceStripTitle": "Wenn es einen Stecker hat, kümmern wir uns wahrscheinlich darum",
-    "deviceStripBody": "Laptops und Desktops, Drucker und Scanner, Router und Mesh-WLAN, Monitore, Webcams, externe Festplatten. Ein Techniker, jedes Gerät im Haus, ein Besuch."
+    "deviceStripBody": "Laptops und Desktops, Drucker und Scanner, Router und Mesh-WLAN, Monitore, Webcams, externe Festplatten. Ein Techniker, jedes Gerät im Haus, ein Besuch.",
+    "group1Title": "Wieder wie neu",
+    "group1Body": "Die alltäglichen Verzögerungen, Hänger und Abstürze, die einen guten Rechner alt aussehen lassen.",
+    "group2Title": "Sicher bleiben",
+    "group2Body": "Schutz, der wirklich aktiv bleibt, und eine Kopie von allem Wichtigen, falls es doch passiert.",
+    "group3Title": "Alles einrichten",
+    "group3Body": "Die Geräte, Verbindungen und Installationen, die nie ganz wie geplant liefen."
   },
   "fixScrub": {
     "kicker": "Während Sie zusehen",

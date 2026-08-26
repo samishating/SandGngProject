@@ -72,7 +72,13 @@
     "softwareBody": "Installations, activations and the awkward ones — missing DLLs, licence conflicts, failed updates.",
     "deviceStripAlt": "Laptop, printer, router and accessories laid out together",
     "deviceStripTitle": "If it plugs in, we probably cover it",
-    "deviceStripBody": "Laptops and desktops, printers and scanners, routers and mesh Wi-Fi, monitors, webcams, external drives. One technician, every device in the house, one visit."
+    "deviceStripBody": "Laptops and desktops, printers and scanners, routers and mesh Wi-Fi, monitors, webcams, external drives. One technician, every device in the house, one visit.",
+    "group1Title": "Make it run like new",
+    "group1Body": "The everyday slowdowns, freezes and crashes that make a working machine feel past it.",
+    "group2Title": "Keep it safe",
+    "group2Body": "Protection that actually stays on, and a copy of everything that matters if the worst happens.",
+    "group3Title": "Get everything set up",
+    "group3Body": "The devices, connections and installs that never quite went to plan."
   },
   "fixScrub": {
     "kicker": "While you watch",

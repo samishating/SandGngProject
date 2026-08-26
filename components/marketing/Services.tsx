@@ -129,8 +129,20 @@ const services = [
   },
 ] as const;
 
+// Ten uniform cards in one grid gave a visitor no way in — every service
+// looked equally likely to be the one they came for. Grouping by the
+// problem someone actually arrives with lets them skip to their third of
+// the list. Keys reference `services` entries above so copy stays in one
+// place.
+const GROUPS = [
+  { titleKey: 'group1Title', bodyKey: 'group1Body', items: ['cleanupTitle', 'tuneupTitle', 'crashesTitle', 'gamingTitle'] },
+  { titleKey: 'group2Title', bodyKey: 'group2Body', items: ['protectionTitle', 'virusTitle', 'backupTitle'] },
+  { titleKey: 'group3Title', bodyKey: 'group3Body', items: ['networkTitle', 'accessoriesTitle', 'softwareTitle'] },
+] as const;
+
 export default function Services() {
   const t = useTranslations('services');
+  const byKey = new Map(services.map(s => [s.titleKey, s]));
 
   return (
     <section className="section" id="services" aria-label="Services">
@@ -139,19 +151,31 @@ export default function Services() {
         <h2 className="reveal-item">{t('title')}</h2>
         <p className="section-lead reveal-item">{t('lead')}</p>
 
-        <div className="reveal-group grid-services">
-          {services.map(s => (
-            <div className="card elev-sm reveal-item" key={s.titleKey}>
-              <span className={`icon-badge icon-badge-${s.badge}`}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
-                  {s.icon}
-                </svg>
-              </span>
-              <span className="card-title service-title">{t(s.titleKey)}</span>
-              <span className="card-body">{t(s.bodyKey)}</span>
+        {GROUPS.map((group, gi) => (
+          <div className="service-group" key={group.titleKey}>
+            <div className="service-rail reveal-item">
+              <span className="service-rail-num" aria-hidden="true">{String(gi + 1).padStart(2, '0')}</span>
+              <h3 className="service-rail-title">{t(group.titleKey)}</h3>
+              <p className="service-rail-body">{t(group.bodyKey)}</p>
             </div>
-          ))}
-        </div>
+            <div className="reveal-group service-group-grid">
+              {group.items.map(key => {
+                const s = byKey.get(key)!;
+                return (
+                  <div className="card elev-sm" key={key}>
+                    <span className={`icon-badge icon-badge-${s.badge}`}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+                        {s.icon}
+                      </svg>
+                    </span>
+                    <span className="card-title service-title">{t(s.titleKey)}</span>
+                    <span className="card-body">{t(s.bodyKey)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
         <div className="device-strip reveal-item">
           <div className="device-strip-media">

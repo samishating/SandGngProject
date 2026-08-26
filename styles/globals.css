@@ -282,10 +282,49 @@ h2 {
 }
 .section-lead { font-size: 18.5px; max-width: 52ch; margin: 18px 0 0; color: color-mix(in srgb, var(--color-text) 84%, transparent); }
 
-.grid-services { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; margin-top: 48px; }
-.grid-services .card { padding: 28px; gap: 12px; }
-.grid-services .icon-badge { width: 40px; height: 40px; }
-.service-title { font-size: 20px; }
+/* Services grouped into themed bands: a sticky editorial rail on the left
+   naming the problem, that group's services on the right. */
+.service-group {
+  display: grid; grid-template-columns: minmax(210px, 270px) 1fr;
+  gap: 48px; margin-top: 64px;
+}
+.service-rail {
+  /* align-self:start keeps the rail its own height while the grid area
+     stays full-row, which is what gives sticky somewhere to travel. */
+  position: sticky; align-self: start; top: 104px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.service-rail-num {
+  font-family: var(--font-heading); font-size: 52px; line-height: 1;
+  letter-spacing: -0.02em; color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-accent-400);
+}
+@supports not (-webkit-text-stroke: 1px black) {
+  .service-rail-num { color: var(--color-accent-400); }
+}
+.service-rail-title { font-size: 27px; line-height: 1.15; margin: 0; }
+.service-rail-body {
+  font-size: 16.5px; margin: 0; max-width: 30ch;
+  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+}
+.service-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); gap: 20px; }
+.service-group-grid .card { padding: 26px; gap: 12px; }
+.service-group-grid .icon-badge { width: 40px; height: 40px; }
+.service-title { font-size: 19px; }
+/* A group of four in a three-wide grid leaves a lone card on the second
+   row. Let that trailing card run the full width instead of sitting
+   orphaned beside a hole. Gated to widths where the grid is definitely
+   three columns, since the nth-child arithmetic only describes an orphan
+   at that count. */
+@media (min-width: 1110px) {
+  .service-group-grid > .card:last-child:nth-child(3n + 1):nth-child(n + 4) {
+    grid-column: 1 / -1;
+    flex-direction: row; align-items: center; gap: 20px;
+  }
+  .service-group-grid > .card:last-child:nth-child(3n + 1):nth-child(n + 4) .icon-badge { flex: none; }
+  .service-group-grid > .card:last-child:nth-child(3n + 1):nth-child(n + 4) .service-title { flex: none; width: 15ch; }
+  .service-group-grid > .card:last-child:nth-child(3n + 1):nth-child(n + 4) .card-body { max-width: 58ch; }
+}
 
 .device-strip {
   margin-top: 22px; display: grid; grid-template-columns: minmax(220px, 380px) 1fr;
@@ -519,6 +558,9 @@ h2 {
      so only one locale control is ever on screen */
   .nav-links, .nav-cta, .locale-switcher { display: none; }
   .nav-toggle { display: flex; }
+  .service-group { grid-template-columns: 1fr; gap: 24px; margin-top: 52px; }
+  .service-rail { position: static; }
+  .service-rail-num { font-size: 42px; }
   .device-strip { grid-template-columns: 1fr; }
   .device-strip-media { aspect-ratio: 16 / 9; }
   .device-strip-copy { padding: 4px 20px 24px; }

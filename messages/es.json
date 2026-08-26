@@ -72,7 +72,13 @@
     "softwareBody": "Instalaciones, activaciones y los casos complicados — DLL que faltan, conflictos de licencia, actualizaciones fallidas.",
     "deviceStripAlt": "Portátil, impresora, router y accesorios colocados juntos",
     "deviceStripTitle": "Si se enchufa, probablemente lo cubrimos",
-    "deviceStripBody": "Portátiles y sobremesas, impresoras y escáneres, routers y Wi-Fi mesh, monitores, webcams, discos externos. Un técnico, todos los dispositivos de la casa, una sola visita."
+    "deviceStripBody": "Portátiles y sobremesas, impresoras y escáneres, routers y Wi-Fi mesh, monitores, webcams, discos externos. Un técnico, todos los dispositivos de la casa, una sola visita.",
+    "group1Title": "Que vuelva a ir como nuevo",
+    "group1Body": "Las lentitudes, bloqueos y cierres inesperados del día a día que hacen parecer viejo a un buen equipo.",
+    "group2Title": "Mantenerlo seguro",
+    "group2Body": "Protección que de verdad sigue activa, y una copia de todo lo que importa por si pasa lo peor.",
+    "group3Title": "Dejarlo todo configurado",
+    "group3Body": "Los dispositivos, las conexiones y las instalaciones que nunca salieron del todo como debían."
   },
   "fixScrub": {
     "kicker": "Mientras usted mira",

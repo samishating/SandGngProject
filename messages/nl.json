@@ -72,7 +72,13 @@
     "softwareBody": "Installaties, activaties en de lastige gevallen — ontbrekende DLL's, licentieconflicten, mislukte updates.",
     "deviceStripAlt": "Laptop, printer, router en accessoires samen neergezet",
     "deviceStripTitle": "Als het een stekker heeft, kunnen we er waarschijnlijk iets mee",
-    "deviceStripBody": "Laptops en desktops, printers en scanners, routers en mesh-wifi, monitoren, webcams, externe schijven. Eén technicus, elk apparaat in huis, één bezoek."
+    "deviceStripBody": "Laptops en desktops, printers en scanners, routers en mesh-wifi, monitoren, webcams, externe schijven. Eén technicus, elk apparaat in huis, één bezoek.",
+    "group1Title": "Weer als nieuw",
+    "group1Body": "De dagelijkse vertragingen, vastlopers en crashes die een prima computer oud doen lijken.",
+    "group2Title": "Veilig houden",
+    "group2Body": "Beveiliging die echt aan blijft, en een kopie van alles wat telt mocht het toch misgaan.",
+    "group3Title": "Alles instellen",
+    "group3Body": "De apparaten, verbindingen en installaties die nooit helemaal liepen zoals bedoeld."
   },
   "fixScrub": {
     "kicker": "Terwijl u meekijkt",
