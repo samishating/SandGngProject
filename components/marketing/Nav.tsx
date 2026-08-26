@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import LocaleSwitcher from './LocaleSwitcher';
 
 export default function Nav() {
   const t = useTranslations('nav');
@@ -26,6 +27,7 @@ export default function Nav() {
           <Link href="/#about">{t('about')}</Link>
           <Link href="/pricing">{t('plans')}</Link>
         </nav>
+        <LocaleSwitcher />
         <Link className="btn btn-primary nav-cta" href="/pricing">
           {t('freeDiagnostic')}
         </Link>
@@ -57,6 +59,7 @@ export default function Nav() {
         <Link className="btn btn-primary btn-block" href="/pricing" onClick={() => setOpen(false)}>
           {t('freeDiagnostic')}
         </Link>
+        <LocaleSwitcher variant="inline" onNavigate={() => setOpen(false)} />
       </div>
     </header>
   );

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import Nav from '@/components/marketing/Nav';
 import Footer from '@/components/marketing/Footer';
+import HtmlLang from '@/components/marketing/HtmlLang';
 
 export function generateStaticParams() {
   return routing.locales.map(locale => ({ locale }));
@@ -25,6 +26,7 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider>
+      <HtmlLang />
       <a className="skip-link" href="#main">
         Skip to content
       </a>
