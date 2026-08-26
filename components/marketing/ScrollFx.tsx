@@ -134,14 +134,42 @@ export default function ScrollFx() {
     const heroTrust = document.getElementById('heroTrust');
     const heroScrollCue = document.querySelector<HTMLElement>('.hero-scroll-cue');
     const parallaxEls = Array.from(document.querySelectorAll<HTMLElement>('[data-parallax]'));
+    const snapHero = createSnap(heroScrub, heroSticky);
+
+    /* ---------- fix-scrub: vertical scroll drives horizontal translateX.
+       Pinned via .fix-stage's position:sticky, desktop/tablet only — mirrors
+       the "(min-width: 861px) and (prefers-reduced-motion: no-preference)"
+       gate in globals.css, so under reduced motion or a narrow viewport the
+       plain CSS-native horizontal-scroll strip is left completely alone.
+       Deliberately no snap here (unlike the hero): per earlier feedback this
+       section must stay a fully unassisted, freely scrollable read. ---------- */
     const fixSticky = document.querySelector<HTMLElement>('.fix-sticky');
     const fixStage = document.querySelector<HTMLElement>('.fix-stage');
-    const fixBefore = document.getElementById('fixBefore');
-    const fixAfter = document.getElementById('fixAfter');
-    const snapHero = createSnap(heroScrub, heroSticky);
-    const FIX_REVEAL_FRACTION = 0.3;
-    const snapFix = createSnap(fixSticky, fixStage, FIX_REVEAL_FRACTION);
-    let lastFixY = scrollY;
+    const fixTrack = document.getElementById('fixTrack');
+    const fixCards = fixTrack ? Array.from(fixTrack.querySelectorAll<HTMLElement>('.fix-card')) : [];
+    const fixDesktopMQ = matchMedia('(min-width: 861px) and (prefers-reduced-motion: no-preference)');
+    let fixMaxTranslate = 0;
+
+    function measureFix() {
+      if (!fixSticky || !fixStage || !fixTrack) return;
+      if (!fixDesktopMQ.matches) {
+        fixSticky.style.height = '';
+        fixTrack.style.transform = '';
+        fixCards.forEach(card => {
+          card.style.transform = '';
+          card.style.opacity = '';
+        });
+        return;
+      }
+      fixMaxTranslate = Math.max(0, fixTrack.scrollWidth - fixStage.clientWidth);
+      // scroll budget: room to cover the horizontal distance plus the
+      // pinned stage's own height, so it unpins cleanly after the last card.
+      const drivePx = fixMaxTranslate * 1.15 + innerHeight * 0.4;
+      fixSticky.style.height = `${fixStage.clientHeight + drivePx}px`;
+    }
+    measureFix();
+    addEventListener('resize', measureFix);
+    cleanups.push(() => removeEventListener('resize', measureFix));
 
     const heroInFrame = requestAnimationFrame(() => heroCopy?.classList.add('is-in'));
     cleanups.push(() => cancelAnimationFrame(heroInFrame));
@@ -248,29 +276,30 @@ export default function ScrollFx() {
         }
       }
 
-      // fix-scrub: scroll-driven before/after crossfade, Moto-card-flip
-      // style. The crossfade itself is compressed into the first
-      // FIX_REVEAL_FRACTION of the drive (cp reaches 1 there and holds) —
-      // snapFix carries a small scroll through that reveal automatically,
-      // and everything past it is a plain, unassisted dwell so there's
-      // real time to read the "after" card.
-      if (fixSticky && fixStage && fixBefore && fixAfter && !reducedMotion) {
+      // fix-scrub: drive the track's horizontal position from vertical
+      // scroll progress through the pinned .fix-sticky wrapper, plus a
+      // subtle scale/opacity lift on whichever card sits nearest the
+      // stage's center — a visual cue only, not a gate on readability.
+      if (fixSticky && fixStage && fixTrack && !reducedMotion && fixDesktopMQ.matches) {
         const rect = fixSticky.getBoundingClientRect();
         const range = fixSticky.offsetHeight - fixStage.offsetHeight;
         const p = range > 0 ? Math.min(1, Math.max(0, -rect.top / range)) : 0;
-        const cp = Math.min(1, p / FIX_REVEAL_FRACTION);
+        // Finish the horizontal travel at 88% of the drive and hold, so the
+        // last card sits still for a beat before the section unpins and
+        // normal vertical scrolling resumes — rather than the strip still
+        // sliding as the whole thing scrolls away.
+        const hp = Math.min(1, p / 0.88);
+        fixTrack.style.transform = `translate3d(${(-hp * fixMaxTranslate).toFixed(1)}px, 0, 0)`;
 
-        fixBefore.style.opacity = String(1 - cp);
-        fixBefore.style.transform = `scale(${(1 - cp * 0.08).toFixed(3)}) rotate(${(-cp * 6).toFixed(2)}deg) translateY(${(-cp * 10).toFixed(1)}px)`;
-        fixAfter.style.opacity = String(cp);
-        fixAfter.style.transform = `scale(${(0.94 + cp * 0.06).toFixed(3)}) rotate(${((1 - cp) * 6).toFixed(2)}deg) translateY(${((1 - cp) * 10).toFixed(1)}px)`;
-
-        const fixMoved = scrollY !== lastFixY;
-        if (fixMoved) {
-          const fixGoingDown = scrollY > lastFixY;
-          lastFixY = scrollY;
-          snapFix(fixGoingDown ? 1 : -1);
-        }
+        const stageRect = fixStage.getBoundingClientRect();
+        const centerX = stageRect.left + stageRect.width / 2;
+        fixCards.forEach(card => {
+          const r = card.getBoundingClientRect();
+          const cardCenter = r.left + r.width / 2;
+          const dist = Math.min(1, Math.abs(cardCenter - centerX) / (stageRect.width / 2 + r.width / 2));
+          card.style.transform = `scale(${(1 - dist * 0.08).toFixed(3)})`;
+          card.style.opacity = (1 - dist * 0.35).toFixed(3);
+        });
       }
 
       // background parallax (quote + about imagery)
