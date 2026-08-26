@@ -11,8 +11,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/admin');
 
+  // A session with no Profile row has nowhere valid to go — bouncing it to
+  // /dashboard would just bounce it back here forever, so it's sent to /login
+  // with an explanation instead. Only an actual role mismatch redirects
+  // across to the other section.
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  if (!profile || profile.role !== 'ADMIN') redirect('/dashboard');
+  if (!profile) redirect('/login?error=noprofile');
+  if (profile.role !== 'ADMIN') redirect('/dashboard');
 
   return (
     <div style={{ minHeight: '100vh' }}>

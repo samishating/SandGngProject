@@ -11,8 +11,12 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   } = await supabase.auth.getUser();
   if (!user) redirect('/login?next=/dashboard');
 
+  // See the matching note in app/admin/layout.tsx — a profile-less session
+  // must not be redirected into the other section, or the two layouts
+  // redirect to each other indefinitely.
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
-  if (!profile || profile.role !== 'SALESPERSON') redirect('/admin');
+  if (!profile) redirect('/login?error=noprofile');
+  if (profile.role !== 'SALESPERSON') redirect('/admin');
 
   return (
     <div style={{ minHeight: '100vh' }}>
