@@ -26,6 +26,25 @@ enum StripeMode {
   SUBSCRIPTION
 }
 
+/// How a sale reached us. MANUAL is the only one in use today — sales are
+/// recorded by an admin, since there is no online checkout. PAYPAL is here so
+/// adding that later is a new value in use, not a schema migration; STRIPE
+/// stays for the dormant webhook path.
+enum SaleProvider {
+  MANUAL
+  PAYPAL
+  STRIPE
+}
+
+/// Approval gate for a recorded sale. Everything is auto-APPROVED while
+/// testing; PENDING exists so a future PayPal flow (or a salesperson-submitted
+/// sale) can be held back from commission totals until confirmed.
+enum SaleApproval {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum SaleStatus {
   ACTIVE
   CANCELED
@@ -48,6 +67,13 @@ model Profile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  /// Accounts are created by an admin with a shared temporary password, so
+  /// every new one starts here. The admin and dashboard layouts refuse to
+  /// render while this is true and send the user to /login/set-password —
+  /// that redirect is the only thing keeping the temp password short-lived,
+  /// so it must stay in front of every authenticated page.
+  mustChangePassword Boolean @default(true)
+
   referralTags     ReferralTag[]
   commissionRules  CommissionRule[]
   sales            Sale[]
@@ -67,7 +93,8 @@ model ReferralTag {
   @@index([salespersonId])
 }
 
-/// Plans/prices are seeded from code, not admin-editable — only CommissionRule is.
+/// The plan set itself is seeded from code; its USD prices are admin-editable
+/// at /admin/plans (see PlanPrice), as are commission rules.
 model Plan {
   id          String   @id @default(cuid())
   key         String   @unique // "one-off" | "household" | "family-elders"
@@ -80,21 +107,38 @@ model Plan {
   sales           Sale[]
 }
 
+/// USD is the single source of truth for every price — the admin edits these
+/// and nothing else. EUR and GBP are derived at render time from ExchangeRate,
+/// so there is exactly one number per plan/interval to keep straight instead
+/// of one per currency.
 model PlanPrice {
-  id            String @id @default(cuid())
-  plan          Plan   @relation(fields: [planId], references: [id])
-  planId        String
-  currency      String // "usd" | "eur"
-  interval      String // "one_time" (the one-off plan only) | "month" | "year"
-  stripePriceId String @unique
-  unitAmount    Int // cents, for display without calling Stripe
+  id        String @id @default(cuid())
+  plan      Plan   @relation(fields: [planId], references: [id])
+  planId    String
+  interval  String // "one_time" (the one-off plan only) | "month" | "year"
+  amountUsd Int // cents, USD
 
-  @@unique([planId, currency, interval])
+  updatedAt DateTime @updatedAt
+
+  @@unique([planId, interval])
 }
 
-/// Commission is resolved from the applicable active rule at the moment a
-/// Stripe event fires, then snapshotted onto CommissionEvent — editing a
-/// rule later never rewrites history. See lib/commission.ts.
+/// One row per non-USD currency, refreshed daily by /api/cron/refresh-rates.
+/// `rate` is how many units of `currency` one USD buys. Rows are only ever
+/// overwritten on a successful fetch, so an API outage leaves yesterday's
+/// rate in place rather than blanking out the pricing page.
+model ExchangeRate {
+  currency  String   @id // "eur" | "gbp"
+  rate      Decimal  @db.Decimal(14, 6)
+  source    String // which API the figure came from
+  rateDate  String // the date the provider stamped on it (YYYY-MM-DD)
+  fetchedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Commission is resolved from the applicable active rule at the moment a sale
+/// is recorded, then snapshotted onto CommissionEvent — editing a rule later
+/// never rewrites history. See lib/commission.ts.
 model CommissionRule {
   id            String          @id @default(cuid())
   salesperson   Profile         @relation(fields: [salespersonId], references: [id])
@@ -117,20 +161,35 @@ model CommissionRule {
 }
 
 model Sale {
-  id                      String       @id @default(cuid())
-  referralTag             ReferralTag? @relation(fields: [referralTagId], references: [id])
-  referralTagId           String?
-  salesperson             Profile?     @relation(fields: [salespersonId], references: [id])
-  salespersonId           String?
-  plan                    Plan         @relation(fields: [planId], references: [id])
-  planId                  String
-  currency                String
+  id            String       @id @default(cuid())
+  referralTag   ReferralTag? @relation(fields: [referralTagId], references: [id])
+  referralTagId String?
+  salesperson   Profile?     @relation(fields: [salespersonId], references: [id])
+  salespersonId String?
+  plan          Plan         @relation(fields: [planId], references: [id])
+  planId        String
+  currency      String
 
-  stripeCustomerId        String
-  stripeCheckoutSessionId String     @unique
-  stripeSubscriptionId    String?    @unique // null for the one-time plan
-  stripePaymentIntentId   String?    @unique // used to trace charge.refunded back to this sale
-  mode                    StripeMode
+  provider SaleProvider @default(MANUAL)
+  approval SaleApproval @default(APPROVED)
+
+  /// What the customer actually paid, in `currency`, plus the USD figure it
+  /// was derived from. Both are snapshotted: today's rate is not tomorrow's,
+  /// and a sale must not silently reprice itself when the rate moves.
+  amount    Int
+  amountUsd Int
+
+  customerEmail String?
+  note          String?
+
+  // All Stripe-specific now that checkout is offline. Nothing writes these
+  // today; they stay so the dormant webhook path still compiles and so
+  // re-enabling Stripe later doesn't need a destructive migration.
+  stripeCustomerId        String?
+  stripeCheckoutSessionId String?     @unique
+  stripeSubscriptionId    String?     @unique // null for the one-time plan
+  stripePaymentIntentId   String?     @unique // used to trace charge.refunded back to this sale
+  mode                    StripeMode?
 
   status    SaleStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
@@ -143,15 +202,19 @@ model Sale {
 }
 
 model CommissionEvent {
-  id             String        @id @default(cuid())
-  sale           Sale          @relation(fields: [saleId], references: [id])
-  saleId         String
-  salesperson    Profile       @relation(fields: [salespersonId], references: [id])
-  salespersonId  String
+  id            String  @id @default(cuid())
+  sale          Sale    @relation(fields: [saleId], references: [id])
+  saleId        String
+  salesperson   Profile @relation(fields: [salespersonId], references: [id])
+  salespersonId String
 
-  eventType      SaleEventType
-  stripeEventId  String        @unique // idempotency/dedup key
-  stripeObjectId String // checkout session id, invoice id, or charge id
+  eventType SaleEventType
+
+  // Both null for manually recorded sales, which have no upstream event to
+  // deduplicate against. Still unique for the Stripe path — Postgres treats
+  // NULLs as distinct, so any number of manual events coexist happily.
+  stripeEventId  String? @unique // idempotency/dedup key
+  stripeObjectId String? // checkout session id, invoice id, or charge id
 
   // The PaymentIntent behind this specific charge — how a later
   // charge.refunded event finds its way back to this exact commission
@@ -159,7 +222,7 @@ model CommissionEvent {
   // payment intent as the event it reverses.
   stripePaymentIntentId String?
 
-  grossAmount Int // cents Stripe charged (negative for REFUND_REVERSAL)
+  grossAmount Int // cents actually charged (negative for REFUND_REVERSAL)
   currency    String
 
   commissionRule   CommissionRule? @relation(fields: [commissionRuleId], references: [id])

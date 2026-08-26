@@ -1,11 +1,14 @@
-// POST /api/admin/salespeople — invites a new salesperson (admin-only).
+// POST /api/admin/salespeople — creates a new salesperson (admin-only).
 // Salespeople never self-register; this is the only way an account gets
-// created. Uses the Supabase service-role client to send the invite, then
-// creates the matching Profile + their first ReferralTag.
+// created. Uses the Supabase service-role client to create the account with
+// the shared temporary password, then creates the matching Profile + their
+// first ReferralTag. The response includes the password for the admin to hand
+// over, since nothing is emailed.
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { prisma } from '@/lib/prisma';
+import { TEMP_PASSWORD } from '@/lib/auth-constants';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TAG_RE = /^[a-z0-9-]{3,32}$/;
@@ -42,23 +45,29 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'That referral tag is already taken' }, { status: 409 });
   }
 
+  // Created outright with the shared temporary password rather than emailed an
+  // invite: Supabase's built-in SMTP rate-limits at a few sends an hour, so
+  // invites silently failed to arrive. The admin passes the password on
+  // directly and the salesperson is forced to change it at first sign-in.
   const supabaseAdmin = createAdminClient();
-  const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`,
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    email,
+    password: TEMP_PASSWORD,
+    email_confirm: true,
   });
   if (error || !data.user) {
-    return NextResponse.json({ error: error?.message ?? 'Failed to invite user' }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? 'Failed to create user' }, { status: 500 });
   }
 
   const profile = await prisma.profile.upsert({
     where: { id: data.user.id },
-    update: { role: 'SALESPERSON', displayName, email },
-    create: { id: data.user.id, role: 'SALESPERSON', displayName, email },
+    update: { role: 'SALESPERSON', displayName, email, mustChangePassword: true },
+    create: { id: data.user.id, role: 'SALESPERSON', displayName, email, mustChangePassword: true },
   });
 
   const referralTag = await prisma.referralTag.create({
     data: { tag, salespersonId: profile.id },
   });
 
-  return NextResponse.json({ profile, referralTag });
+  return NextResponse.json({ profile, referralTag, tempPassword: TEMP_PASSWORD });
 }

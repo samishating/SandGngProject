@@ -27,7 +27,7 @@ export async function proxy(request: NextRequest) {
   // next-intl too — otherwise the locale middleware rewrites them to
   // /en/login and /en/auth/callback, which have no matching route and 404.
   // That breaks both signing in and the magic-link callback itself.
-  if (pathname === '/login' || pathname.startsWith('/auth/')) {
+  if (pathname === '/login' || pathname.startsWith('/login/') || pathname.startsWith('/auth/')) {
     return NextResponse.next();
   }
 

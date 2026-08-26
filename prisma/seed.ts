@@ -1,11 +1,12 @@
-// Seeds Plan + PlanPrice rows from Stripe Price IDs in env vars. Runtime
-// code reads price IDs from Postgres afterward, so switching Stripe test
-// <-> live only requires re-running this seed.
+// Seeds the plan set and its starting USD prices.
 //
-// `dotenv/config` is needed here because this file also runs standalone via
-// `tsx prisma/seed.ts` (the `npm run prisma:seed` script), which — unlike
-// `next dev`/`next build` or the Prisma CLI's own config loading — doesn't
-// load .env on its own.
+// USD is the only stored price — EUR and GBP are derived from ExchangeRate at
+// render time (see lib/currency.ts). These amounts are just the starting
+// point; the admin edits them at /admin/plans afterwards, and re-running this
+// seed will NOT overwrite an edited price. Only missing rows are created.
+//
+// `dotenv/config` is needed because this also runs standalone via
+// `tsx prisma/seed.ts`, which doesn't load .env on its own.
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -13,18 +14,12 @@ import { PrismaPg } from '@prisma/adapter-pg';
 const adapter = new PrismaPg(process.env.DIRECT_URL || process.env.DATABASE_URL!);
 const prisma = new PrismaClient({ adapter });
 
-interface PriceSeed {
-  currency: 'usd' | 'eur';
-  interval: 'one_time' | 'month' | 'year';
-  envVar: string;
-  unitAmount: number; // cents
-}
-
 interface PlanSeed {
   key: string;
   name: string;
   isRecurring: boolean;
-  prices: PriceSeed[];
+  /** interval -> starting price in USD cents */
+  prices: Record<string, number>;
 }
 
 const plans: PlanSeed[] = [
@@ -32,34 +27,20 @@ const plans: PlanSeed[] = [
     key: 'one-off',
     name: 'One-off',
     isRecurring: false,
-    prices: [
-      { currency: 'usd', interval: 'one_time', envVar: 'STRIPE_PRICE_ONEOFF_USD', unitAmount: 8900 },
-      { currency: 'eur', interval: 'one_time', envVar: 'STRIPE_PRICE_ONEOFF_EUR', unitAmount: 8900 },
-    ],
+    prices: { one_time: 8900 },
   },
   {
     key: 'household',
     name: 'Household',
     isRecurring: true,
-    prices: [
-      { currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_HOUSEHOLD_USD_MONTHLY', unitAmount: 1900 },
-      { currency: 'eur', interval: 'month', envVar: 'STRIPE_PRICE_HOUSEHOLD_EUR_MONTHLY', unitAmount: 1900 },
-      // 2 months free vs. paying monthly — 19 * 10.
-      { currency: 'usd', interval: 'year', envVar: 'STRIPE_PRICE_HOUSEHOLD_USD_YEARLY', unitAmount: 19000 },
-      { currency: 'eur', interval: 'year', envVar: 'STRIPE_PRICE_HOUSEHOLD_EUR_YEARLY', unitAmount: 19000 },
-    ],
+    // Yearly is 10x monthly — two months free.
+    prices: { month: 1900, year: 19000 },
   },
   {
     key: 'family-elders',
     name: 'Family & elders',
     isRecurring: true,
-    prices: [
-      { currency: 'usd', interval: 'month', envVar: 'STRIPE_PRICE_FAMILY_USD_MONTHLY', unitAmount: 2900 },
-      { currency: 'eur', interval: 'month', envVar: 'STRIPE_PRICE_FAMILY_EUR_MONTHLY', unitAmount: 2900 },
-      // 2 months free vs. paying monthly — 29 * 10.
-      { currency: 'usd', interval: 'year', envVar: 'STRIPE_PRICE_FAMILY_USD_YEARLY', unitAmount: 29000 },
-      { currency: 'eur', interval: 'year', envVar: 'STRIPE_PRICE_FAMILY_EUR_YEARLY', unitAmount: 29000 },
-    ],
+    prices: { month: 2900, year: 29000 },
   },
 ];
 
@@ -71,17 +52,18 @@ async function main() {
       create: { key: p.key, name: p.name, isRecurring: p.isRecurring },
     });
 
-    for (const price of p.prices) {
-      const stripePriceId = process.env[price.envVar];
-      if (!stripePriceId) {
-        throw new Error(`Missing env var ${price.envVar} — create the Stripe Price first.`);
-      }
-      await prisma.planPrice.upsert({
-        where: { planId_currency_interval: { planId: plan.id, currency: price.currency, interval: price.interval } },
-        update: { stripePriceId, unitAmount: price.unitAmount },
-        create: { planId: plan.id, currency: price.currency, interval: price.interval, stripePriceId, unitAmount: price.unitAmount },
+    for (const [interval, amountUsd] of Object.entries(p.prices)) {
+      const existing = await prisma.planPrice.findUnique({
+        where: { planId_interval: { planId: plan.id, interval } },
       });
-      console.log(`Seeded ${p.key} / ${price.currency} / ${price.interval} -> ${stripePriceId}`);
+
+      if (existing) {
+        console.log(`Kept ${p.key} / ${interval} at $${(existing.amountUsd / 100).toFixed(2)} (already set)`);
+        continue;
+      }
+
+      await prisma.planPrice.create({ data: { planId: plan.id, interval, amountUsd } });
+      console.log(`Seeded ${p.key} / ${interval} -> $${(amountUsd / 100).toFixed(2)}`);
     }
   }
 }

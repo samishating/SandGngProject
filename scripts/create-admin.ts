@@ -4,17 +4,19 @@
 //
 // Usage:  npm run create-admin -- you@example.com  ["Display Name"]
 //
-// No password is ever set. Sign-in is the magic link at /login, so the account
-// is created with email_confirm: true — that marks the address as verified so
-// the first OTP works immediately, without depending on a confirmation email
-// being delivered first.
+// The account is created with the shared temporary password and
+// mustChangePassword set, so the first sign-in is forced through
+// /login/set-password. email_confirm is set because nothing is ever emailed —
+// Supabase's built-in SMTP rate-limits at a handful of sends per hour, which
+// is what made the original magic-link flow unusable.
 //
-// Safe to re-run: an existing auth user is reused, and an existing Profile is
-// promoted to ADMIN rather than duplicated.
+// Safe to re-run: an existing account is reset back to the temporary password
+// and re-flagged, which doubles as the lockout recovery path.
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createClient } from '@supabase/supabase-js';
+import { TEMP_PASSWORD } from '../lib/auth-constants';
 
 // Wrapped in a function so the validated result is plainly `string` at every
 // later use, including inside the async helpers below.
@@ -62,9 +64,17 @@ async function main() {
   let authUser = await findAuthUserByEmail(email);
 
   if (authUser) {
-    console.log(`Auth user already exists (${authUser.id}) — reusing it.`);
+    // Re-running resets an existing account back to the temporary password,
+    // which doubles as the "I'm locked out" recovery path.
+    const { error } = await supabase.auth.admin.updateUserById(authUser.id, { password: TEMP_PASSWORD });
+    if (error) throw error;
+    console.log(`Auth user already exists (${authUser.id}) — reset to the temporary password.`);
   } else {
-    const { data, error } = await supabase.auth.admin.createUser({ email, email_confirm: true });
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password: TEMP_PASSWORD,
+      email_confirm: true,
+    });
     if (error) throw error;
     authUser = data.user;
     console.log(`Created Supabase auth user ${authUser.id}`);
@@ -72,16 +82,16 @@ async function main() {
 
   const profile = await prisma.profile.upsert({
     where: { id: authUser.id },
-    update: { email, role: 'ADMIN', ...(displayName ? { displayName } : {}) },
-    create: { id: authUser.id, email, role: 'ADMIN', displayName: displayName ?? null },
+    update: { email, role: 'ADMIN', mustChangePassword: true, ...(displayName ? { displayName } : {}) },
+    create: { id: authUser.id, email, role: 'ADMIN', mustChangePassword: true, displayName: displayName ?? null },
   });
 
   console.log(`\nAdmin ready:`);
-  console.log(`  email  ${profile.email}`);
-  console.log(`  role   ${profile.role}`);
-  console.log(`  id     ${profile.id}`);
+  console.log(`  email     ${profile.email}`);
+  console.log(`  password  ${TEMP_PASSWORD}   (temporary — must be changed at first sign-in)`);
+  console.log(`  role      ${profile.role}`);
+  console.log(`  id        ${profile.id}`);
   console.log(`\nSign in at ${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/login`);
-  console.log('and request a sign-in link for that address, then open /admin.');
 }
 
 main()

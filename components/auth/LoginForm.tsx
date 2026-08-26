@@ -1,53 +1,35 @@
 'use client';
 
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-type Status = 'idle' | 'sending' | 'sent' | 'error';
-
-// What GoTrue returns for "no such user, and I'm not allowed to create one".
-// Current versions answer otp_disabled ("Signups not allowed for otp"); the
-// others are accepted too so a server-side version bump can't silently turn
-// a normal typo into a scary error message.
-const NOT_REGISTERED_CODES = new Set(['otp_disabled', 'signup_disabled', 'user_not_found']);
+type Status = 'idle' | 'submitting' | 'error';
 
 export default function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/dashboard';
   const urlError = searchParams.get('error');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [status, setStatus] = useState<Status>('idle');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStatus('sending');
+    setStatus('submitting');
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        // Accounts are only ever created by an admin (the invite flow, or
-        // scripts/create-admin.ts). Without this, signInWithOtp defaults to
-        // creating a user for whatever address is typed — so anyone who found
-        // this unlinked URL could mint themselves an auth user.
-        shouldCreateUser: false,
-      },
-    });
-    // Deliberately reports success either way. With shouldCreateUser off, an
-    // unregistered address comes back as an error, and surfacing that would
-    // turn this page into an account enumeration oracle; the link simply
-    // never arrives instead. Genuine faults (rate limits, provider outages)
-    // still show the failure, since those are worth acting on.
-    if (error && !NOT_REGISTERED_CODES.has(error.code ?? '')) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
       setStatus('error');
       return;
     }
-    setStatus('sent');
-  }
-
-  if (status === 'sent') {
-    return <p className="card-body">If that address has an account, a sign-in link is on its way.</p>;
+    // Where to actually land is decided server-side: the layouts redirect to
+    // /login/set-password while the temporary password is still in use, and
+    // bounce between /admin and /dashboard by role. refresh() is what lets
+    // those server components see the session cookie that was just set.
+    router.replace(next);
+    router.refresh();
   }
 
   return (
@@ -65,17 +47,27 @@ export default function LoginForm() {
         onChange={e => setEmail(e.target.value)}
         autoComplete="email"
       />
-      <button className="btn btn-primary" type="submit" disabled={status === 'sending'}>
-        {status === 'sending' ? 'Sending…' : 'Send sign-in link'}
+      <label className="visually-hidden" htmlFor="loginPassword">
+        Password
+      </label>
+      <input
+        className="input"
+        id="loginPassword"
+        type="password"
+        required
+        placeholder="Password"
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        autoComplete="current-password"
+      />
+      <button className="btn btn-primary" type="submit" disabled={status === 'submitting'}>
+        {status === 'submitting' ? 'Signing in…' : 'Sign in'}
       </button>
-      {status === 'error' && <p className="card-body">Something went wrong sending the link. Try again.</p>}
+      {/* Deliberately does not distinguish "no such account" from "wrong
+          password" — this page is reachable by anyone who guesses the URL. */}
+      {status === 'error' && <p className="card-body">That email and password don&apos;t match. Try again.</p>}
       {status === 'idle' && urlError === 'noprofile' && (
-        <p className="card-body">
-          That account isn&apos;t set up yet. Ask an admin to finish creating it.
-        </p>
-      )}
-      {status === 'idle' && urlError === 'auth' && (
-        <p className="card-body">That sign-in link has expired or was already used. Request a new one.</p>
+        <p className="card-body">That account isn&apos;t set up yet. Ask an admin to finish creating it.</p>
       )}
     </form>
   );

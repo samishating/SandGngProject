@@ -17,6 +17,9 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   // across to the other section.
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
   if (!profile) redirect('/login?error=noprofile');
+  // Must come before the role check: the shared temporary password is only
+  // acceptable because no authenticated page renders while it's still in use.
+  if (profile.mustChangePassword) redirect('/login/set-password');
   if (profile.role !== 'ADMIN') redirect('/dashboard');
 
   return (
