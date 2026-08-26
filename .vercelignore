@@ -8,4 +8,8 @@ _ds/
 # Original full-res PNGs and the pre-Next.js copies of the optimized
 # web assets — the app serves everything from public/assets/ instead.
 # Kept on disk for the design canvas above, not needed in the deployment.
-assets/
+# Anchored with a leading slash — unanchored "assets/" also matches
+# public/assets/ at any depth, which is exactly what the live app serves
+# images and the hero video from. That's almost certainly why they were
+# missing in production.
+/assets/
