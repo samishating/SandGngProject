@@ -19,6 +19,7 @@ export default function AdminNav() {
         <span className="brand">Hearthline admin</span>
         <nav className="nav-links" aria-label="Admin">
           <Link href="/admin">Overview</Link>
+          <Link href="/admin/plans">Prices</Link>
           <Link href="/admin/salespeople">Salespeople</Link>
           <Link href="/admin/sales">Sales</Link>
         </nav>
