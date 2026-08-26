@@ -142,6 +142,26 @@ h1, h2, h3 { text-wrap: balance; }
 }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; align-items: center; }
 
+.hero-trust {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; align-items: center; pointer-events: none;
+  opacity: 0; will-change: transform, opacity;
+}
+.hero-trust-inner {
+  width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; gap: 18px;
+}
+.hero-trust-icon {
+  width: 54px; height: 54px; border-radius: 50%; flex: none;
+  background: var(--color-accent-2); color: var(--color-bg);
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+.hero-trust-text {
+  font-family: var(--font-heading); font-size: clamp(20px, 2.6vw, 32px);
+  line-height: 1.2; letter-spacing: -0.01em; max-width: 13ch;
+}
+
 .hero-scroll-cue {
   position: absolute; left: 50%; bottom: 26px; z-index: 4; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -311,10 +331,16 @@ h2 {
 }
 
 /* ---------- plans ---------- */
-.grid-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; align-items: start; margin-top: 46px; }
+.billing-toggle { display: flex; justify-content: center; margin-top: 40px; }
+.billing-toggle .seg-opt { font-size: 14px; padding: 9px 16px; }
+.grid-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; align-items: start; margin-top: 30px; }
 .plan-card { padding: 32px; gap: 16px; }
 .plan-price { font-family: var(--font-heading); font-size: 40px; line-height: 1; }
 .plan-period { font-size: 17px; font-family: var(--font-body); }
+.plan-savings {
+  display: inline-block; margin-top: -8px; font-size: 13px;
+  color: color-mix(in srgb, var(--color-text) 65%, transparent);
+}
 .plan-card-featured { background: var(--color-accent-2-100); outline: 2px solid var(--color-accent-2-300); }
 .plan-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .plan-kicker-featured { color: var(--color-accent-2-900); }

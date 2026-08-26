@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  SALESPERSON
+}
+
+enum CommissionType {
+  PERCENTAGE
+  FLAT
+}
+
+enum CommissionScope {
+  SALESPERSON_DEFAULT
+  PLAN_SPECIFIC
+}
+
+enum StripeMode {
+  PAYMENT
+  SUBSCRIPTION
+}
+
+enum SaleStatus {
+  ACTIVE
+  CANCELED
+  REFUNDED
+}
+
+enum SaleEventType {
+  INITIAL_PURCHASE
+  RENEWAL
+  REFUND_REVERSAL
+}
+
+/// id matches Supabase auth.users.id (uuid); created alongside the Supabase
+/// invite (see lib/supabase/admin.ts) — no cross-schema Prisma FK to auth.users.
+model Profile {
+  id          String   @id
+  email       String   @unique
+  role        Role
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  referralTags     ReferralTag[]
+  commissionRules  CommissionRule[]
+  sales            Sale[]
+  commissionEvents CommissionEvent[]
+}
+
+model ReferralTag {
+  id            String   @id @default(cuid())
+  tag           String   @unique // used as ?ref=<tag>
+  salesperson   Profile  @relation(fields: [salespersonId], references: [id])
+  salespersonId String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  sales Sale[]
+
+  @@index([salespersonId])
+}
+
+/// Plans/prices are seeded from code, not admin-editable — only CommissionRule is.
+model Plan {
+  id          String   @id @default(cuid())
+  key         String   @unique // "one-off" | "household" | "family-elders"
+  name        String
+  isRecurring Boolean
+  createdAt   DateTime @default(now())
+
+  prices          PlanPrice[]
+  commissionRules CommissionRule[]
+  sales           Sale[]
+}
+
+model PlanPrice {
+  id            String @id @default(cuid())
+  plan          Plan   @relation(fields: [planId], references: [id])
+  planId        String
+  currency      String // "usd" | "eur"
+  interval      String // "one_time" (the one-off plan only) | "month" | "year"
+  stripePriceId String @unique
+  unitAmount    Int // cents, for display without calling Stripe
+
+  @@unique([planId, currency, interval])
+}
+
+/// Commission is resolved from the applicable active rule at the moment a
+/// Stripe event fires, then snapshotted onto CommissionEvent — editing a
+/// rule later never rewrites history. See lib/commission.ts.
+model CommissionRule {
+  id            String          @id @default(cuid())
+  salesperson   Profile         @relation(fields: [salespersonId], references: [id])
+  salespersonId String
+  scope         CommissionScope
+  plan          Plan?           @relation(fields: [planId], references: [id])
+  planId        String? // null when scope = SALESPERSON_DEFAULT
+  type          CommissionType
+  currency      String? // required for FLAT, ignored for PERCENTAGE
+  value         Decimal         @db.Decimal(10, 4) // 10.0000 = 10% if PERCENTAGE, cents if FLAT
+  isActive      Boolean         @default(true)
+  effectiveFrom DateTime        @default(now())
+  effectiveTo   DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  commissionEvents CommissionEvent[]
+
+  @@index([salespersonId, planId, isActive])
+}
+
+model Sale {
+  id                      String       @id @default(cuid())
+  referralTag             ReferralTag? @relation(fields: [referralTagId], references: [id])
+  referralTagId           String?
+  salesperson             Profile?     @relation(fields: [salespersonId], references: [id])
+  salespersonId           String?
+  plan                    Plan         @relation(fields: [planId], references: [id])
+  planId                  String
+  currency                String
+
+  stripeCustomerId        String
+  stripeCheckoutSessionId String     @unique
+  stripeSubscriptionId    String?    @unique // null for the one-time plan
+  stripePaymentIntentId   String?    @unique // used to trace charge.refunded back to this sale
+  mode                    StripeMode
+
+  status    SaleStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  commissionEvents CommissionEvent[]
+
+  @@index([salespersonId])
+  @@index([referralTagId])
+}
+
+model CommissionEvent {
+  id             String        @id @default(cuid())
+  sale           Sale          @relation(fields: [saleId], references: [id])
+  saleId         String
+  salesperson    Profile       @relation(fields: [salespersonId], references: [id])
+  salespersonId  String
+
+  eventType      SaleEventType
+  stripeEventId  String        @unique // idempotency/dedup key
+  stripeObjectId String // checkout session id, invoice id, or charge id
+
+  // The PaymentIntent behind this specific charge — how a later
+  // charge.refunded event finds its way back to this exact commission
+  // event. Not unique: a REFUND_REVERSAL intentionally shares the same
+  // payment intent as the event it reverses.
+  stripePaymentIntentId String?
+
+  grossAmount Int // cents Stripe charged (negative for REFUND_REVERSAL)
+  currency    String
+
+  commissionRule   CommissionRule? @relation(fields: [commissionRuleId], references: [id])
+  commissionRuleId String?
+  commissionType   CommissionType? // snapshot, null if no rule matched
+  commissionValue  Decimal?        @db.Decimal(10, 4) // snapshot
+  commissionAmount Int // computed cents, snapshot, negative for reversals
+
+  createdAt DateTime @default(now())
+
+  @@index([salespersonId, createdAt])
+  @@index([stripePaymentIntentId])
+}
