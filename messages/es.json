@@ -148,16 +148,16 @@
     "billedAnnually": "Facturado una vez al año",
     "oneOffKicker": "Puntual",
     "oneOffBody": "Una sola sesión con un técnico, diagnóstico incluido. Si no podemos repararlo, no pagas nada.",
-    "oneOffCta": "Reservar una sesión",
+    "oneOffCta": "Empezar",
     "householdKicker": "Hogar",
     "householdBadge": "El más elegido",
     "householdPeriod": " / mes",
     "householdBody": "Sesiones ilimitadas para cada ordenador del hogar, mantenimiento programado dos veces al año, atención prioritaria.",
-    "householdCta": "Empezar con un diagnóstico gratuito",
+    "householdCta": "Empezar",
     "familyKicker": "Familia y mayores",
     "familyPeriod": " / mes",
     "familyBody": "Todo lo incluido en Hogar, en dos direcciones, con un técnico asignado que conoce tu equipo.",
-    "familyCta": "Hablarlo con calma",
+    "familyCta": "Empezar",
     "oneOffPeriod": " / sesión",
     "oneOffNote": "Pago único, sin suscripción",
     "billedMonthly": "Facturado cada mes, cancele cuando quiera"
@@ -189,5 +189,22 @@
     "refund": "Política de reembolso",
     "security": "Seguridad y RGPD",
     "copyright": "© 2026 Hearthline Support. Todos los derechos reservados."
+  },
+  "checkout": {
+    "kicker": "Pedido",
+    "title": "Confirma tu plan",
+    "lead": "Dinos cómo localizarte y un técnico te llamará para dejarlo todo listo. Aquí no hace falta tarjeta.",
+    "summaryTitle": "Tu plan",
+    "changePlan": "Cambiar de plan",
+    "namePlaceholder": "Nombre completo",
+    "emailPlaceholder": "Correo electrónico",
+    "phonePlaceholder": "Número de teléfono",
+    "notePlaceholder": "¿Algo que debamos saber? (opcional)",
+    "submit": "Realizar pedido",
+    "submitting": "Enviando…",
+    "reassurance": "Llamamos en un día laborable. El pago se acuerda en esa llamada — ahora no se cobra nada.",
+    "successTitle": "Pedido recibido",
+    "successBody": "Gracias. Un técnico te llamará en un día laborable para concertar la sesión y el pago.",
+    "error": "No se pudo enviar el pedido. Inténtalo de nuevo o llámanos."
   }
 }

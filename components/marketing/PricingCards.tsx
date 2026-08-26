@@ -13,8 +13,9 @@ type Interval = 'month' | 'year';
  * so switching billing period is instant and no rate maths ships to the
  * browser.
  *
- * There is no checkout: each CTA scrolls to the callback form, since plans are
- * sold over the phone.
+ * Each CTA carries the chosen plan and billing period into /checkout, which
+ * books the order — there is no payment step, a technician calls back to
+ * arrange it.
  */
 export default function PricingCards({ pricing }: { pricing: PricingData }) {
   const t = useTranslations('plans');
@@ -53,7 +54,7 @@ export default function PricingCards({ pricing }: { pricing: PricingData }) {
           </span>
           <span className="plan-note">{t('oneOffNote')}</span>
           <span className="card-body">{t('oneOffBody')}</span>
-          <Link className="btn btn-secondary btn-block" href="/#callback">
+          <Link className="btn btn-secondary btn-block" href="/checkout?plan=one-off">
             {t('oneOffCta')}
           </Link>
         </div>
@@ -69,7 +70,7 @@ export default function PricingCards({ pricing }: { pricing: PricingData }) {
           </span>
           <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
           <span className="card-body">{t('householdBody')}</span>
-          <Link className="btn btn-primary btn-block" href="/#callback">
+          <Link className="btn btn-primary btn-block" href={`/checkout?plan=household&interval=${interval}`}>
             {t('householdCta')}
           </Link>
         </div>
@@ -82,7 +83,7 @@ export default function PricingCards({ pricing }: { pricing: PricingData }) {
           </span>
           <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
           <span className="card-body">{t('familyBody')}</span>
-          <Link className="btn btn-secondary btn-block" href="/#callback">
+          <Link className="btn btn-secondary btn-block" href={`/checkout?plan=family-elders&interval=${interval}`}>
             {t('familyCta')}
           </Link>
         </div>

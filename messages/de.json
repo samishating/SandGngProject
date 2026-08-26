@@ -148,16 +148,16 @@
     "billedAnnually": "Einmal jährlich abgerechnet",
     "oneOffKicker": "Einmalig",
     "oneOffBody": "Eine einzelne Sitzung mit einem Techniker, Diagnose inklusive. Können wir es nicht reparieren, zahlen Sie nichts.",
-    "oneOffCta": "Sitzung buchen",
+    "oneOffCta": "Loslegen",
     "householdKicker": "Haushalt",
     "householdBadge": "Meistgewählt",
     "householdPeriod": " / Monat",
     "householdBody": "Unbegrenzte Sitzungen für jeden Computer im Haushalt, zweimal jährlich geplante Wartung, bevorzugte Bearbeitung.",
-    "householdCta": "Mit kostenloser Diagnose starten",
+    "householdCta": "Loslegen",
     "familyKicker": "Familie & Senioren",
     "familyPeriod": " / Monat",
     "familyBody": "Alles aus Haushalt, für zwei Adressen, mit einem festen Techniker, der Ihre Einrichtung kennt.",
-    "familyCta": "Persönlich besprechen",
+    "familyCta": "Loslegen",
     "oneOffPeriod": " / Sitzung",
     "oneOffNote": "Einmalzahlung, kein Abo",
     "billedMonthly": "Monatlich abgerechnet, jederzeit kündbar"
@@ -189,5 +189,22 @@
     "refund": "Rückerstattungsrichtlinie",
     "security": "Sicherheit & DSGVO",
     "copyright": "© 2026 Hearthline Support. Alle Rechte vorbehalten."
+  },
+  "checkout": {
+    "kicker": "Bestellung",
+    "title": "Tarif bestätigen",
+    "lead": "Sagen Sie uns, wie wir Sie erreichen — ein Techniker ruft an und richtet alles ein. Keine Kartendaten nötig.",
+    "summaryTitle": "Ihr Tarif",
+    "changePlan": "Tarif wechseln",
+    "namePlaceholder": "Vollständiger Name",
+    "emailPlaceholder": "E-Mail-Adresse",
+    "phonePlaceholder": "Telefonnummer",
+    "notePlaceholder": "Sollten wir etwas wissen? (optional)",
+    "submit": "Bestellung aufgeben",
+    "submitting": "Wird gesendet…",
+    "reassurance": "Wir rufen innerhalb eines Werktags an. Die Zahlung wird bei diesem Anruf geregelt — jetzt wird nichts abgebucht.",
+    "successTitle": "Bestellung eingegangen",
+    "successBody": "Vielen Dank. Ein Techniker ruft Sie innerhalb eines Werktags an, um den Termin und die Zahlung zu vereinbaren.",
+    "error": "Die Bestellung konnte nicht gesendet werden. Bitte erneut versuchen oder anrufen."
   }
 }

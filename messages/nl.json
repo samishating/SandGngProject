@@ -148,16 +148,16 @@
     "billedAnnually": "Eenmaal per jaar gefactureerd",
     "oneOffKicker": "Eenmalig",
     "oneOffBody": "Eén sessie met een technicus, diagnose inbegrepen. Kunnen we het niet repareren, dan betaalt u niets.",
-    "oneOffCta": "Sessie boeken",
+    "oneOffCta": "Aan de slag",
     "householdKicker": "Huishouden",
     "householdBadge": "Meest gekozen",
     "householdPeriod": " / maand",
     "householdBody": "Onbeperkte sessies voor elke computer in huis, twee keer per jaar gepland onderhoud, voorrang bij beantwoording.",
-    "householdCta": "Begin met een gratis diagnose",
+    "householdCta": "Aan de slag",
     "familyKicker": "Familie & senioren",
     "familyPeriod": " / maand",
     "familyBody": "Alles uit Huishouden, voor twee adressen, met een vaste technicus die uw situatie kent.",
-    "familyCta": "Bespreek het rustig",
+    "familyCta": "Aan de slag",
     "oneOffPeriod": " / sessie",
     "oneOffNote": "Eenmalige betaling, geen abonnement",
     "billedMonthly": "Maandelijks gefactureerd, altijd opzegbaar"
@@ -189,5 +189,22 @@
     "refund": "Restitutiebeleid",
     "security": "Beveiliging & AVG",
     "copyright": "© 2026 Hearthline Support. Alle rechten voorbehouden."
+  },
+  "checkout": {
+    "kicker": "Bestelling",
+    "title": "Bevestig je pakket",
+    "lead": "Laat weten hoe we je kunnen bereiken; een technicus belt om alles in te stellen. Hier zijn geen kaartgegevens nodig.",
+    "summaryTitle": "Jouw pakket",
+    "changePlan": "Ander pakket kiezen",
+    "namePlaceholder": "Volledige naam",
+    "emailPlaceholder": "E-mailadres",
+    "phonePlaceholder": "Telefoonnummer",
+    "notePlaceholder": "Iets wat we moeten weten? (optioneel)",
+    "submit": "Bestelling plaatsen",
+    "submitting": "Bezig met verzenden…",
+    "reassurance": "We bellen binnen één werkdag. Betaling regelen we tijdens dat gesprek — er wordt nu niets afgeschreven.",
+    "successTitle": "Bestelling ontvangen",
+    "successBody": "Bedankt. Een technicus belt je binnen één werkdag om de sessie en de betaling te regelen.",
+    "error": "De bestelling kon niet worden verzonden. Probeer het opnieuw of bel ons."
   }
 }

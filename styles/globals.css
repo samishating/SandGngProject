@@ -506,6 +506,10 @@ h2 {
 .billing-toggle { display: flex; justify-content: center; margin-top: 40px; }
 .billing-toggle .seg-opt { font-size: 14px; padding: 9px 16px; }
 .grid-plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 22px; align-items: start; margin-top: 30px; }
+/* Checkout: order summary beside the form on desktop, summary first on a
+   phone so the price is visible before the fields are filled in. */
+.checkout-grid { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 24px; align-items: start; margin-top: 30px; }
+@media (max-width: 720px) { .checkout-grid { grid-template-columns: 1fr; } }
 .plan-card { padding: 32px; gap: 16px; }
 .plan-price { font-family: var(--font-heading); font-size: 40px; line-height: 1; }
 .plan-period { font-size: 17px; font-family: var(--font-body); }
