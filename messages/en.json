@@ -204,6 +204,8 @@
     "submitting": "Placing order…",
     "reassurance": "We'll call within one business day. Payment is arranged on that call — nothing is charged now.",
     "successTitle": "Order received",
+    "referenceLabel": "Your order number",
+    "referenceHint": "Keep this handy — quote it if you call us about this order.",
     "successBody": "Thank you. A technician will call you within one business day to book your session and arrange payment.",
     "error": "Something went wrong placing that order. Please try again, or call us."
   }

@@ -204,6 +204,8 @@
     "submitting": "Enviando…",
     "reassurance": "Llamamos en un día laborable. El pago se acuerda en esa llamada — ahora no se cobra nada.",
     "successTitle": "Pedido recibido",
+    "referenceLabel": "Tu número de pedido",
+    "referenceHint": "Guárdalo a mano e indícanoslo si llamas por este pedido.",
     "successBody": "Gracias. Un técnico te llamará en un día laborable para concertar la sesión y el pago.",
     "error": "No se pudo enviar el pedido. Inténtalo de nuevo o llámanos."
   }

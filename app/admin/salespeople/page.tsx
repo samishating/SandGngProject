@@ -18,7 +18,8 @@ export default async function AdminSalespeoplePage() {
       {salespeople.length === 0 ? (
         <p className="card-body">No salespeople yet — invite one above.</p>
       ) : (
-        <table className="table">
+        <div className="table-wrap">
+          <table className="table">
           <thead>
             <tr>
               <th>Name</th>
@@ -48,6 +49,7 @@ export default async function AdminSalespeoplePage() {
             ))}
           </tbody>
         </table>
+          </div>
       )}
     </div>
   );

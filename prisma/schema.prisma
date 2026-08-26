@@ -46,6 +46,11 @@ enum SaleApproval {
 }
 
 enum SaleStatus {
+  /// Placed at checkout and waiting for an agent to call the customer back.
+  /// This — not ACTIVE — is where every new order starts: nothing is sold
+  /// until someone has spoken to them and taken payment.
+  AWAITING_CALLBACK
+  /// The callback happened and the plan is running.
   ACTIVE
   CANCELED
   REFUNDED
@@ -161,7 +166,14 @@ model CommissionRule {
 }
 
 model Sale {
-  id            String       @id @default(cuid())
+  id String @id @default(cuid())
+
+  /// Short human-quotable order code (6 chars, e.g. "K7M2QP"). The cuid above
+  /// is unusable over the phone; this is what a customer reads out and what
+  /// staff search on. Generated from an alphabet with no 0/O/1/I/L so it
+  /// survives being spoken aloud and written down. See lib/order-reference.ts.
+  reference String @unique
+
   referralTag   ReferralTag? @relation(fields: [referralTagId], references: [id])
   referralTagId String?
   salesperson   Profile?     @relation(fields: [salespersonId], references: [id])
@@ -179,8 +191,17 @@ model Sale {
   amount    Int
   amountUsd Int
 
+  /// Captured at checkout. Stored as real columns rather than packed into
+  /// `note` because an agent working the callback queue needs to see who to
+  /// ring and on what number at a glance.
+  customerName  String?
   customerEmail String?
+  customerPhone String?
   note          String?
+
+  /// Stamped when an agent marks the callback done, so the queue can show how
+  /// long someone has been waiting and who has already been dealt with.
+  calledBackAt DateTime?
 
   // All Stripe-specific now that checkout is offline. Nothing writes these
   // today; they stay so the dormant webhook path still compiles and so
@@ -191,7 +212,7 @@ model Sale {
   stripePaymentIntentId   String?     @unique // used to trace charge.refunded back to this sale
   mode                    StripeMode?
 
-  status    SaleStatus @default(ACTIVE)
+  status    SaleStatus @default(AWAITING_CALLBACK)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
@@ -199,6 +220,8 @@ model Sale {
 
   @@index([salespersonId])
   @@index([referralTagId])
+  // Drives the "waiting for callback" queue each agent opens from their nav.
+  @@index([salespersonId, status])
 }
 
 model CommissionEvent {

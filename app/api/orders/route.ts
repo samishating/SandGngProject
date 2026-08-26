@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { resolveReferral } from '@/lib/referral';
 import { resolveCommissionRule, calculateCommissionAmount } from '@/lib/commission';
 import { getPricing } from '@/lib/pricing';
+import { withUniqueReference } from '@/lib/order-reference';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INTERVALS = new Set(['one_time', 'month', 'year']);
@@ -53,21 +54,29 @@ export async function POST(req: Request) {
 
   const referral = await resolveReferral();
 
-  const sale = await prisma.sale.create({
-    data: {
-      planId: plan.id,
-      referralTagId: referral?.referralTagId ?? null,
-      salespersonId: referral?.salespersonId ?? null,
-      currency: pricing.currency,
-      amount: priced.amount,
-      amountUsd: priced.amountUsd,
-      provider: 'MANUAL',
-      approval: 'APPROVED',
-      customerEmail: email,
-      note: [`${name} · ${phone}`, note].filter(Boolean).join(' — ') || null,
-      mode: plan.isRecurring ? 'SUBSCRIPTION' : 'PAYMENT',
-    },
-  });
+  const sale = await withUniqueReference(reference =>
+    prisma.sale.create({
+      data: {
+        reference,
+        planId: plan.id,
+        referralTagId: referral?.referralTagId ?? null,
+        salespersonId: referral?.salespersonId ?? null,
+        currency: pricing.currency,
+        amount: priced.amount,
+        amountUsd: priced.amountUsd,
+        provider: 'MANUAL',
+        approval: 'APPROVED',
+        // Nothing is sold until an agent has called and taken payment, so an
+        // order starts in the callback queue rather than counting as running.
+        status: 'AWAITING_CALLBACK',
+        customerName: name,
+        customerPhone: phone,
+        customerEmail: email,
+        note: note || null,
+        mode: plan.isRecurring ? 'SUBSCRIPTION' : 'PAYMENT',
+      },
+    }),
+  );
 
   // Commission is snapshotted now, against whatever rule applies at this
   // moment — editing a rule later must never rewrite what was already earned.
@@ -95,5 +104,5 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ ok: true, orderId: sale.id });
+  return NextResponse.json({ ok: true, reference: sale.reference });
 }

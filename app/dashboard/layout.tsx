@@ -20,10 +20,16 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (profile.mustChangePassword) redirect('/login/set-password');
   if (profile.role !== 'SALESPERSON') redirect('/admin');
 
+  // Counted here rather than in the nav component so the badge is right on
+  // first paint instead of popping in after a client fetch.
+  const waitingCount = await prisma.sale.count({
+    where: { salespersonId: profile.id, status: 'AWAITING_CALLBACK' },
+  });
+
   return (
     <div style={{ minHeight: '100vh' }}>
-      <DashboardNav />
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>{children}</div>
+      <DashboardNav waitingCount={waitingCount} />
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 24px' }}>{children}</div>
     </div>
   );
 }

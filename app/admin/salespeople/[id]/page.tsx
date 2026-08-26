@@ -41,6 +41,7 @@ export default async function SalespersonDetailPage({ params }: { params: Promis
         {salesperson.referralTags.length === 0 ? (
           <p className="card-body">No tags yet.</p>
         ) : (
+          <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
@@ -63,6 +64,7 @@ export default async function SalespersonDetailPage({ params }: { params: Promis
               ))}
             </tbody>
           </table>
+          </div>
         )}
         <AddTagForm salespersonId={salesperson.id} />
       </section>
@@ -72,6 +74,7 @@ export default async function SalespersonDetailPage({ params }: { params: Promis
         {salesperson.commissionRules.length === 0 ? (
           <p className="card-body">No rules configured — sales for this salesperson will record $0/€0 commission until one is set.</p>
         ) : (
+          <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
@@ -97,6 +100,7 @@ export default async function SalespersonDetailPage({ params }: { params: Promis
               })}
             </tbody>
           </table>
+          </div>
         )}
         <CommissionRuleForm salespersonId={salesperson.id} plans={plans} />
       </section>

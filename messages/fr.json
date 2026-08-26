@@ -204,6 +204,8 @@
     "submitting": "Envoi en cours…",
     "reassurance": "Nous appelons sous un jour ouvré. Le paiement se règle lors de cet appel — rien n'est prélevé maintenant.",
     "successTitle": "Commande reçue",
+    "referenceLabel": "Votre numéro de commande",
+    "referenceHint": "Gardez-le à portée de main et indiquez-le si vous nous appelez à propos de cette commande.",
     "successBody": "Merci. Un technicien vous appellera sous un jour ouvré pour fixer la session et organiser le paiement.",
     "error": "La commande n'a pas pu être envoyée. Réessayez ou appelez-nous."
   }

@@ -57,6 +57,7 @@ export default async function DashboardPage() {
         {sales.length === 0 ? (
           <p className="card-body">No sales yet.</p>
         ) : (
+          <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
@@ -75,6 +76,7 @@ export default async function DashboardPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

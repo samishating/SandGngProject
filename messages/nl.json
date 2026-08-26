@@ -204,6 +204,8 @@
     "submitting": "Bezig met verzenden…",
     "reassurance": "We bellen binnen één werkdag. Betaling regelen we tijdens dat gesprek — er wordt nu niets afgeschreven.",
     "successTitle": "Bestelling ontvangen",
+    "referenceLabel": "Je bestelnummer",
+    "referenceHint": "Houd dit bij de hand en noem het als je ons over deze bestelling belt.",
     "successBody": "Bedankt. Een technicus belt je binnen één werkdag om de sessie en de betaling te regelen.",
     "error": "De bestelling kon niet worden verzonden. Probeer het opnieuw of bel ons."
   }

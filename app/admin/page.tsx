@@ -43,6 +43,7 @@ export default async function AdminOverviewPage() {
         {recentSales.length === 0 ? (
           <p className="card-body">No sales yet.</p>
         ) : (
+          <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
@@ -63,6 +64,7 @@ export default async function AdminOverviewPage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

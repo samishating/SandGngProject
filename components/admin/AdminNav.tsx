@@ -14,7 +14,7 @@ export default function AdminNav() {
   }
 
   return (
-    <header className="site-nav" style={{ position: 'sticky' }}>
+    <header className="site-nav staff-nav" style={{ position: 'sticky' }}>
       <div className="nav-inner">
         <span className="brand">Hearthline admin</span>
         <nav className="nav-links" aria-label="Admin">

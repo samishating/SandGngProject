@@ -20,6 +20,7 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
   const t = useTranslations('checkout');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
+  const [reference, setReference] = useState('');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,6 +49,8 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
       return;
     }
 
+    const body = (await res.json()) as { reference?: string };
+    setReference(body.reference ?? '');
     setStatus('done');
   }
 
@@ -55,6 +58,13 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
     return (
       <div className="card elev-sm" style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <span className="card-title">{t('successTitle')}</span>
+        {reference && (
+          <>
+            <span className="card-kicker">{t('referenceLabel')}</span>
+            <span className="order-reference">{reference}</span>
+            <span className="card-body">{t('referenceHint')}</span>
+          </>
+        )}
         <span className="card-body">{t('successBody')}</span>
       </div>
     );
