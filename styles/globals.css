@@ -514,6 +514,24 @@ h2 {
   color: var(--color-accent-2, var(--color-accent));
 }
 
+/* Pairs of related controls in staff forms. The forms are column flexboxes,
+   whose default align-items:stretch would otherwise pull an inline-flex .seg
+   out to the full card width — which is what made the segmented pills look
+   like full-width bars. */
+.field-row { display: flex; flex-wrap: wrap; gap: 20px 28px; align-items: flex-start; }
+.field-group { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; min-width: 0; }
+/* Belt and braces: never let a segmented control stretch to fill a column. */
+.field-group .seg { flex: 0 0 auto; align-self: flex-start; max-width: 100%; }
+.field-group .input { align-self: stretch; }
+@media (max-width: 560px) {
+  .field-row { gap: 16px; }
+  /* Two segmented pairs won't fit side by side on a phone; each takes the
+     full row rather than squeezing to an unreadable width. */
+  .field-group { width: 100%; }
+  .field-group .seg { width: 100%; }
+  .field-group .seg-opt { flex: 1 1 0; justify-content: center; }
+}
+
 /* Staff tables carry more columns than a phone is wide. Scroll them inside
    their own box so the page itself never scrolls sideways. */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }

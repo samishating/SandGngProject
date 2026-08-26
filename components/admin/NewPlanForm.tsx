@@ -110,34 +110,39 @@ export default function NewPlanForm() {
         <textarea className="input" rows={3} value={description} onChange={e => setDescription(e.target.value)} />
       </label>
 
-      <div className="seg" role="radiogroup" aria-label="Billing type" style={{ alignSelf: 'flex-start' }}>
-        <label className="seg-opt">
-          <input type="radio" name="billingType" checked={isRecurring} onChange={() => setIsRecurring(true)} />
-          Subscription
-        </label>
-        <label className="seg-opt">
-          <input type="radio" name="billingType" checked={!isRecurring} onChange={() => setIsRecurring(false)} />
-          One-off
-        </label>
-      </div>
-
-      {isRecurring ? (
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span className="card-kicker">Monthly (USD)</span>
-            <input className="input" type="number" min="1" step="1" value={monthly} onChange={e => setMonthly(e.target.value)} style={{ width: 130 }} />
-          </label>
-          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span className="card-kicker">Yearly (USD)</span>
-            <input className="input" type="number" min="1" step="1" value={yearly} onChange={e => setYearly(e.target.value)} style={{ width: 130 }} />
-          </label>
+      <div className="field-row">
+        <div className="field-group">
+          <span className="card-kicker">Billing</span>
+          <div className="seg" role="radiogroup" aria-label="Billing type">
+            <label className="seg-opt">
+              <input type="radio" name="billingType" checked={isRecurring} onChange={() => setIsRecurring(true)} />
+              Subscription
+            </label>
+            <label className="seg-opt">
+              <input type="radio" name="billingType" checked={!isRecurring} onChange={() => setIsRecurring(false)} />
+              One-off
+            </label>
+          </div>
         </div>
-      ) : (
-        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <span className="card-kicker">Price per session (USD)</span>
-          <input className="input" type="number" min="1" step="1" value={oneOff} onChange={e => setOneOff(e.target.value)} style={{ width: 130 }} />
-        </label>
-      )}
+
+        {isRecurring ? (
+          <>
+            <div className="field-group">
+              <span className="card-kicker">Monthly (USD)</span>
+              <input className="input" type="number" min="1" step="1" value={monthly} onChange={e => setMonthly(e.target.value)} style={{ width: 130 }} />
+            </div>
+            <div className="field-group">
+              <span className="card-kicker">Yearly (USD)</span>
+              <input className="input" type="number" min="1" step="1" value={yearly} onChange={e => setYearly(e.target.value)} style={{ width: 130 }} />
+            </div>
+          </>
+        ) : (
+          <div className="field-group">
+            <span className="card-kicker">Price per session (USD)</span>
+            <input className="input" type="number" min="1" step="1" value={oneOff} onChange={e => setOneOff(e.target.value)} style={{ width: 130 }} />
+          </div>
+        )}
+      </div>
 
       <p className="card-body" style={{ fontSize: 14, opacity: 0.8 }}>
         Created hidden. Set a price, then use &ldquo;Make live&rdquo; to put it on the pricing page.

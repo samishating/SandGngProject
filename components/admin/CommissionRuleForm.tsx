@@ -51,44 +51,57 @@ export default function CommissionRuleForm({ salespersonId, plans }: { salespers
     <form onSubmit={handleSubmit} className="card elev-sm" style={{ padding: 24, gap: 14, display: 'flex', flexDirection: 'column' }}>
       <span className="card-title">Set a commission rule</span>
 
-      <div className="seg" role="radiogroup" aria-label="Rule scope">
-        <label className="seg-opt">
-          <input type="radio" checked={scope === 'SALESPERSON_DEFAULT'} onChange={() => setScope('SALESPERSON_DEFAULT')} />
-          Default (all plans)
-        </label>
-        <label className="seg-opt">
-          <input type="radio" checked={scope === 'PLAN_SPECIFIC'} onChange={() => setScope('PLAN_SPECIFIC')} />
-          Specific plan
-        </label>
+      {/* Each toggle sits with the dropdown it reveals, so the two pairs read
+          as two choices side by side rather than four stacked controls. */}
+      <div className="field-row">
+        <div className="field-group">
+          <span className="card-kicker">Applies to</span>
+          <div className="seg" role="radiogroup" aria-label="Rule scope">
+            <label className="seg-opt">
+              <input type="radio" checked={scope === 'SALESPERSON_DEFAULT'} onChange={() => setScope('SALESPERSON_DEFAULT')} />
+              Default (all plans)
+            </label>
+            <label className="seg-opt">
+              <input type="radio" checked={scope === 'PLAN_SPECIFIC'} onChange={() => setScope('PLAN_SPECIFIC')} />
+              Specific plan
+            </label>
+          </div>
+          {scope === 'PLAN_SPECIFIC' && (
+            <select className="input" value={planId} onChange={e => setPlanId(e.target.value)} aria-label="Plan">
+              {plans.map(p => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        <div className="field-group">
+          <span className="card-kicker">Paid as</span>
+          <div className="seg" role="radiogroup" aria-label="Commission type">
+            <label className="seg-opt">
+              <input type="radio" checked={type === 'PERCENTAGE'} onChange={() => setType('PERCENTAGE')} />
+              Percentage
+            </label>
+            <label className="seg-opt">
+              <input type="radio" checked={type === 'FLAT'} onChange={() => setType('FLAT')} />
+              Flat fee
+            </label>
+          </div>
+          {type === 'FLAT' && (
+            <select
+              className="input"
+              value={currency}
+              onChange={e => setCurrency(e.target.value as 'usd' | 'eur')}
+              aria-label="Currency"
+            >
+              <option value="usd">USD</option>
+              <option value="eur">EUR</option>
+            </select>
+          )}
+        </div>
       </div>
-
-      {scope === 'PLAN_SPECIFIC' && (
-        <select className="input" value={planId} onChange={e => setPlanId(e.target.value)}>
-          {plans.map(p => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      )}
-
-      <div className="seg" role="radiogroup" aria-label="Commission type">
-        <label className="seg-opt">
-          <input type="radio" checked={type === 'PERCENTAGE'} onChange={() => setType('PERCENTAGE')} />
-          Percentage
-        </label>
-        <label className="seg-opt">
-          <input type="radio" checked={type === 'FLAT'} onChange={() => setType('FLAT')} />
-          Flat fee
-        </label>
-      </div>
-
-      {type === 'FLAT' && (
-        <select className="input" value={currency} onChange={e => setCurrency(e.target.value as 'usd' | 'eur')}>
-          <option value="usd">USD</option>
-          <option value="eur">EUR</option>
-        </select>
-      )}
 
       <input
         className="input"
