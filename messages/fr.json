@@ -150,7 +150,10 @@
     "familyKicker": "Famille et aînés",
     "familyPeriod": " / mois",
     "familyBody": "Tout ce qui est inclus dans Foyer, sur deux adresses, avec un technicien attitré qui connaît votre installation.",
-    "familyCta": "En discuter"
+    "familyCta": "En discuter",
+    "oneOffPeriod": " / session",
+    "oneOffNote": "Paiement unique, sans abonnement",
+    "billedMonthly": "Facturé chaque mois, annulable à tout moment"
   },
   "cta": {
     "title": "Commencez par le diagnostic gratuit",

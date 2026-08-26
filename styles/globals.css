@@ -417,7 +417,7 @@ h2 {
 .plan-card { padding: 32px; gap: 16px; }
 .plan-price { font-family: var(--font-heading); font-size: 40px; line-height: 1; }
 .plan-period { font-size: 17px; font-family: var(--font-body); }
-.plan-savings {
+.plan-note {
   display: inline-block; margin-top: -8px; font-size: 13px;
   color: color-mix(in srgb, var(--color-text) 65%, transparent);
 }

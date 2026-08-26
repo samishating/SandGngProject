@@ -91,9 +91,18 @@ export default function Pricing() {
         </div>
 
         <div className="reveal-group grid-plans">
+          {/* The one-off plan has no billing interval, so the toggle above
+              doesn't apply to it. It still renders a period suffix and a
+              note line so the three cards keep the same vertical rhythm at
+              either toggle state, and so "no subscription" is stated rather
+              than left to be inferred from a missing "/ month". */}
           <div className="card elev-sm plan-card">
             <span className="card-kicker">{t('oneOffKicker')}</span>
-            <span className="plan-price">{formatAmount(AMOUNTS['one-off'].oneTime, currency, locale)}</span>
+            <span className="plan-price">
+              {formatAmount(AMOUNTS['one-off'].oneTime, currency, locale)}
+              <span className="plan-period">{t('oneOffPeriod')}</span>
+            </span>
+            <span className="plan-note">{t('oneOffNote')}</span>
             <span className="card-body">{t('oneOffBody')}</span>
             <PlanButton planKey="one-off" className="btn btn-secondary btn-block">
               {t('oneOffCta')}
@@ -109,7 +118,7 @@ export default function Pricing() {
               {formatAmount(AMOUNTS.household[interval], currency, locale)}
               <span className="plan-period">{interval === 'month' ? t('householdPeriod') : t('yearlyPeriod')}</span>
             </span>
-            {interval === 'year' && <span className="plan-savings">{t('billedAnnually')}</span>}
+            <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
             <span className="card-body">{t('householdBody')}</span>
             <PlanButton planKey="household" interval={interval} className="btn btn-primary btn-block">
               {t('householdCta')}
@@ -122,7 +131,7 @@ export default function Pricing() {
               {formatAmount(AMOUNTS['family-elders'][interval], currency, locale)}
               <span className="plan-period">{interval === 'month' ? t('familyPeriod') : t('yearlyPeriod')}</span>
             </span>
-            {interval === 'year' && <span className="plan-savings">{t('billedAnnually')}</span>}
+            <span className="plan-note">{interval === 'year' ? t('billedAnnually') : t('billedMonthly')}</span>
             <span className="card-body">{t('familyBody')}</span>
             <PlanButton planKey="family-elders" interval={interval} className="btn btn-secondary btn-block">
               {t('familyCta')}

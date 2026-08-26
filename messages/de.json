@@ -150,7 +150,10 @@
     "familyKicker": "Familie & Senioren",
     "familyPeriod": " / Monat",
     "familyBody": "Alles aus Haushalt, für zwei Adressen, mit einem festen Techniker, der Ihre Einrichtung kennt.",
-    "familyCta": "Persönlich besprechen"
+    "familyCta": "Persönlich besprechen",
+    "oneOffPeriod": " / Sitzung",
+    "oneOffNote": "Einmalzahlung, kein Abo",
+    "billedMonthly": "Monatlich abgerechnet, jederzeit kündbar"
   },
   "cta": {
     "title": "Starten Sie mit der kostenlosen Diagnose",

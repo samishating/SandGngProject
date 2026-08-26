@@ -150,7 +150,10 @@
     "familyKicker": "Family & elders",
     "familyPeriod": " / month",
     "familyBody": "Everything in Household across two addresses, with a named technician who knows your setup.",
-    "familyCta": "Talk it through"
+    "familyCta": "Talk it through",
+    "oneOffPeriod": " / session",
+    "oneOffNote": "One-time payment, no subscription",
+    "billedMonthly": "Billed monthly, cancel anytime"
   },
   "cta": {
     "title": "Start with the free diagnostic",

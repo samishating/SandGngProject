@@ -150,7 +150,10 @@
     "familyKicker": "Familie & senioren",
     "familyPeriod": " / maand",
     "familyBody": "Alles uit Huishouden, voor twee adressen, met een vaste technicus die uw situatie kent.",
-    "familyCta": "Bespreek het rustig"
+    "familyCta": "Bespreek het rustig",
+    "oneOffPeriod": " / sessie",
+    "oneOffNote": "Eenmalige betaling, geen abonnement",
+    "billedMonthly": "Maandelijks gefactureerd, altijd opzegbaar"
   },
   "cta": {
     "title": "Begin met de gratis diagnose",
