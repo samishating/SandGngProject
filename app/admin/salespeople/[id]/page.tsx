@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import AddTagForm from '@/components/admin/AddTagForm';
 import TagToggle from '@/components/admin/TagToggle';
 import CommissionRuleForm from '@/components/admin/CommissionRuleForm';
+import DeleteCommissionRule from '@/components/admin/DeleteCommissionRule';
 
 function formatRuleValue(type: 'PERCENTAGE' | 'FLAT', value: unknown, currency: string | null) {
   const n = Number(value);
@@ -77,16 +78,23 @@ export default async function SalespersonDetailPage({ params }: { params: Promis
                 <th>Scope</th>
                 <th>Type</th>
                 <th>Value</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
-              {salesperson.commissionRules.map(r => (
-                <tr key={r.id}>
-                  <td>{r.scope === 'PLAN_SPECIFIC' ? r.plan?.name : 'Default (all plans)'}</td>
-                  <td>{r.type === 'FLAT' ? `Flat (${r.currency?.toUpperCase()})` : 'Percentage'}</td>
-                  <td>{formatRuleValue(r.type, r.value, r.currency)}</td>
-                </tr>
-              ))}
+              {salesperson.commissionRules.map(r => {
+                const scopeLabel = r.scope === 'PLAN_SPECIFIC' ? (r.plan?.name ?? 'plan-specific') : 'default (all plans)';
+                return (
+                  <tr key={r.id}>
+                    <td>{r.scope === 'PLAN_SPECIFIC' ? r.plan?.name : 'Default (all plans)'}</td>
+                    <td>{r.type === 'FLAT' ? `Flat (${r.currency?.toUpperCase()})` : 'Percentage'}</td>
+                    <td>{formatRuleValue(r.type, r.value, r.currency)}</td>
+                    <td>
+                      <DeleteCommissionRule id={r.id} label={`${formatRuleValue(r.type, r.value, r.currency)} ${scopeLabel}`} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
