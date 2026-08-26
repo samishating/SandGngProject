@@ -1,0 +1,15 @@
+# Claude Design canvas source (design-tool artifact, not part of the live
+# site — index.html is the deployed page) and its runtime bundle.
+Hearthline Landing 3D.dc.html
+support.js
+_ds/
+.thumbnail
+
+# Original full-res PNGs — the live site uses the optimized .webp copies in
+# assets/ instead (same names, .webp extension). Kept on disk for the design
+# canvas above, but they'd otherwise triple the deployment size for nothing.
+assets/hf-study.png
+assets/hf-livingroom.png
+assets/hf-tech.png
+assets/hf-devices.png
+assets/photo.jpg
