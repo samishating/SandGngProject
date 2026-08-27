@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { attributionLabel } from '@/lib/attribution';
 import { parseMonthKey } from '@/lib/billing-period';
 import MonthPicker from '@/components/shared/MonthPicker';
 
@@ -148,7 +149,7 @@ export default async function AdminOverviewPage({ searchParams }: { searchParams
                     <td>{sale.customerName ?? '—'}</td>
                     <td>{sale.plan.name}</td>
                     <td>{formatCents(sale.amount, sale.currency)}</td>
-                    <td>{sale.salesperson?.displayName ?? sale.salesperson?.email ?? '—'}</td>
+                    <td>{attributionLabel(sale.salesperson)}</td>
                     <td>{STATUS_LABELS[sale.status] ?? sale.status}</td>
                   </tr>
                 ))}

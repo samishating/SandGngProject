@@ -106,7 +106,7 @@ export default function AccountResults({ accounts }: { accounts: Account[] }) {
                       <td>{day(o.createdAt)}</td>
                       <td>{o.periodStart && o.periodEnd ? `${day(o.periodStart)} – ${day(o.periodEnd)}` : '—'}</td>
                       <td>{STATUS_LABELS[o.status] ?? o.status}</td>
-                      <td>{o.salespersonName ?? '—'}</td>
+                      <td>{o.salespersonName}</td>
                     </tr>
                   ))}
                 </tbody>

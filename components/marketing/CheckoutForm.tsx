@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
+import { testCheckoutEnabled } from '@/lib/test-checkout';
 
 interface Props {
   planKey: string;
@@ -66,6 +68,13 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
           </>
         )}
         <span className="card-body">{t('successBody')}</span>
+        {/* Only rendered while the payment simulator is switched on. Not
+            translated: it is a development affordance, never customer-facing. */}
+        {testCheckoutEnabled() && reference && (
+          <Link className="btn btn-secondary" href={`/checkout/pay?ref=${reference}`}>
+            Continue to test payment
+          </Link>
+        )}
       </div>
     );
   }

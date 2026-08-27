@@ -56,6 +56,14 @@
   --radius-md: 16px;
   --radius-lg: 28px;
 
+  /* Shape rule, applied throughout: a pill reads as intentional only on a
+     single-line control, where the curve traces the line of text. Anything
+     holding a block — a textarea, a panel, a card — gets a soft rectangle
+     instead, because a 999px radius on a tall box eats its own corners and
+     pushes the content away from them. */
+  --radius-pill: 999px;
+  --radius-block: 20px;
+
   /* Elevation — derived from the ground: soft ink-tinted shadows on a
      light theme, a hairline edge + ambient darkness on a dark one. */
   --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
@@ -250,8 +258,17 @@ textarea.input { min-height: 90px; resize: vertical; }
 .dialog-body { font-size: 14px; opacity: 0.85; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
 
-/* — rounded frame: everything softens, small controls go pill — */
+/* — rounded frame: single-line controls go pill, blocks get a soft rectangle.
+     See --radius-block for the reasoning. — */
 .card, .dialog { border-radius: calc(var(--radius-lg) * 1.15); }
-.btn, .tag, .seg, .input { border-radius: 999px; }
+.btn, .tag, .seg, .input { border-radius: var(--radius-pill); }
 .input { padding-inline: 14px; }
+
+/* Multi-line by nature, so never a pill. Padding grows to match: a rectangle
+   wants its text inset evenly rather than pushed clear of a curve. */
+textarea.input,
+select[multiple].input {
+  border-radius: var(--radius-block);
+  padding: 12px 16px;
+}
 

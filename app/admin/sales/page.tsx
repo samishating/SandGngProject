@@ -1,9 +1,18 @@
 import { prisma } from '@/lib/prisma';
+import { attributionLabel } from '@/lib/attribution';
 import { normalizeReference } from '@/lib/order-reference';
 
 function formatCents(cents: number, currency: string) {
   return new Intl.NumberFormat('en', { style: 'currency', currency }).format(cents / 100);
 }
+
+// Raw enum values leak the database into the UI; these are what staff read.
+const STATUS_LABELS: Record<string, string> = {
+  AWAITING_CALLBACK: 'Awaiting callback',
+  ACTIVE: 'Active',
+  CANCELED: 'Cancelled',
+  REFUNDED: 'Refunded',
+};
 
 export const dynamic = 'force-dynamic';
 
@@ -86,7 +95,7 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: P
                   <td>{sale.createdAt.toLocaleDateString()}</td>
                   <td>{sale.plan.name}</td>
                   <td>{gross ? formatCents(gross, sale.currency) : '—'}</td>
-                  <td>{sale.salesperson?.displayName ?? sale.salesperson?.email ?? '— (no referral)'}</td>
+                  <td>{attributionLabel(sale.salesperson)}</td>
                   <td>{sale.referralTag?.tag ?? '—'}</td>
                   <td>
                     {sale.salesperson ? formatCents(netCommission, sale.currency) : '—'}
@@ -96,7 +105,7 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: P
                       </span>
                     )}
                   </td>
-                  <td>{sale.status}</td>
+                  <td>{STATUS_LABELS[sale.status] ?? sale.status}</td>
                 </tr>
               );
             })}

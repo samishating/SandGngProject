@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { normalizeReference } from '@/lib/order-reference';
+import { attributionLabel } from '@/lib/attribution';
 
 /**
  * Finds a customer from whatever an agent has to hand on a phone call: a name,
@@ -23,7 +24,7 @@ export interface AccountOrder {
   periodStart: Date | null;
   periodEnd: Date | null;
   note: string | null;
-  salespersonName: string | null;
+  salespersonName: string;
   isRecurring: boolean;
 }
 
@@ -119,7 +120,7 @@ export async function findAccounts(rawQuery: string, salespersonId?: string): Pr
       periodStart: s.periodStart,
       periodEnd: s.periodEnd,
       note: s.note,
-      salespersonName: s.salesperson?.displayName ?? s.salesperson?.email ?? null,
+      salespersonName: attributionLabel(s.salesperson),
       isRecurring: s.plan.isRecurring,
     }));
 
