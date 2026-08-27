@@ -18,12 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 interface Props {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ plan?: string; interval?: string }>;
+  searchParams: Promise<{ plan?: string; interval?: string; ref?: string }>;
 }
 
 export default async function CheckoutPage({ params, searchParams }: Props) {
   const { locale } = await params;
-  const { plan: planKey, interval: rawInterval } = await searchParams;
+  const { plan: planKey, interval: rawInterval, ref } = await searchParams;
 
   const t = await getTranslations('checkout');
   const plans = await getTranslations('plans');
@@ -77,7 +77,7 @@ export default async function CheckoutPage({ params, searchParams }: Props) {
           </div>
 
           <div>
-            <CheckoutForm planKey={plan.key} interval={interval} locale={locale} />
+            <CheckoutForm planKey={plan.key} interval={interval} locale={locale} referralTag={ref ?? null} />
           </div>
         </div>
       </div>

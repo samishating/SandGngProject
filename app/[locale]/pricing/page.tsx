@@ -12,11 +12,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: `${plans('title')} — Hearthline`, description: meta('description') };
 }
 
-export default async function PricingPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function PricingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ ref?: string }>;
+}) {
   const { locale } = await params;
+  // Carried into the checkout links so an agent can share /pricing?ref=theirs
+  // and still be credited — the tag travels in the URL, never in a cookie.
+  const { ref } = await searchParams;
   return (
     <>
-      <Pricing locale={locale} />
+      <Pricing locale={locale} referralTag={ref ?? null} />
       <ScrollFx />
     </>
   );

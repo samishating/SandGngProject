@@ -20,7 +20,7 @@ type Interval = 'month' | 'year';
  * Each CTA carries the chosen plan and billing period into /checkout, which
  * books the order; there is no payment step, a technician calls back.
  */
-export default function PricingCards({ pricing }: { pricing: PricingData }) {
+export default function PricingCards({ pricing, referralTag = null }: { pricing: PricingData; referralTag?: string | null }) {
   const t = useTranslations('plans');
   const [interval, setInterval] = useState<Interval>('month');
 
@@ -46,14 +46,14 @@ export default function PricingCards({ pricing }: { pricing: PricingData }) {
 
       <div className="reveal-group grid-plans">
         {pricing.list.map(plan => (
-          <PlanCard key={plan.key} plan={plan} interval={interval} />
+          <PlanCard key={plan.key} plan={plan} interval={interval} referralTag={referralTag} />
         ))}
       </div>
     </>
   );
 }
 
-function PlanCard({ plan, interval }: { plan: PricedPlan; interval: Interval }) {
+function PlanCard({ plan, interval, referralTag }: { plan: PricedPlan; interval: Interval; referralTag: string | null }) {
   const t = useTranslations('plans');
 
   // A one-off has a single price and ignores the toggle entirely. A recurring
@@ -71,7 +71,12 @@ function PlanCard({ plan, interval }: { plan: PricedPlan; interval: Interval }) 
   const note =
     activeInterval === 'one_time' ? t('oneOffNote') : activeInterval === 'year' ? t('billedAnnually') : t('billedMonthly');
 
-  const href = plan.isRecurring ? `/checkout?plan=${plan.key}&interval=${activeInterval}` : `/checkout?plan=${plan.key}`;
+  // The tag rides along to checkout, where it's read once. Nothing persists
+  // between visits, so a customer who arrives without one counts for nobody.
+  const params = new URLSearchParams({ plan: plan.key });
+  if (plan.isRecurring) params.set('interval', activeInterval);
+  if (referralTag) params.set('ref', referralTag);
+  const href = `/checkout?${params.toString()}`;
 
   return (
     <div className={`card plan-card ${plan.isFeatured ? 'elev-md plan-card-featured' : 'elev-sm'}`}>

@@ -27,6 +27,8 @@ export async function POST(req: Request) {
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
   const phone = typeof body.phone === 'string' ? body.phone.trim() : '';
   const note = typeof body.note === 'string' ? body.note.trim().slice(0, 1000) : '';
+  // The referral tag from the checkout URL the customer actually used.
+  const ref = typeof body.ref === 'string' ? body.ref : '';
 
   // Honeypot — a real person never fills a field they cannot see. Answer 200
   // so a bot can't tell it was rejected.
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
   const priced = pricing.plans[plan.key]?.[interval];
   if (!priced) return NextResponse.json({ error: 'Could not price that plan' }, { status: 500 });
 
-  const referral = await resolveReferral();
+  const referral = await resolveReferral(ref);
 
   // An order that came through a salesperson's link is theirs to close — it
   // waits in their callback queue until they've spoken to the customer.

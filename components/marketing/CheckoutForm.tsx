@@ -10,6 +10,9 @@ interface Props {
   planKey: string;
   interval: string;
   locale: string;
+  /** The ?ref= on this checkout URL, or null. Credits the agent whose link
+      produced this order — nothing is remembered between visits. */
+  referralTag: string | null;
 }
 
 type Status = 'idle' | 'submitting' | 'done' | 'error';
@@ -19,7 +22,7 @@ type Status = 'idle' | 'submitting' | 'done' | 'error';
  * step — a technician calls back to arrange the session and take payment, so
  * this deliberately never asks for card details.
  */
-export default function CheckoutForm({ planKey, interval, locale }: Props) {
+export default function CheckoutForm({ planKey, interval, locale, referralTag }: Props) {
   const t = useTranslations('checkout');
   const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
@@ -48,6 +51,7 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
         phone: form.get('phone'),
         note: form.get('note'),
         company: form.get('company'),
+        ref: referralTag,
       }),
     });
 

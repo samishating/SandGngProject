@@ -2,7 +2,6 @@ import createIntlMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from './i18n/routing';
 import { updateSession } from './lib/supabase/middleware';
-import { REFERRAL_COOKIE, REFERRAL_COOKIE_MAX_AGE } from './lib/referral-constants';
 
 const intlMiddleware = createIntlMiddleware(routing);
 
@@ -31,23 +30,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const response = intlMiddleware(request);
-
-  // Referral attribution: ?ref=<tag> anywhere on the marketing site tags
-  // the visitor for REFERRAL_COOKIE_MAX_AGE. Not validated against the DB
-  // here — see lib/referral.ts, checked once at checkout time.
-  const ref = request.nextUrl.searchParams.get('ref');
-  if (ref) {
-    response.cookies.set(REFERRAL_COOKIE, ref, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: REFERRAL_COOKIE_MAX_AGE,
-      path: '/',
-    });
-  }
-
-  return response;
+  // Referral attribution deliberately does NOT happen here any more.
+  //
+  // A ?ref= used to be stored in a 30-day cookie, which meant one visit to an
+  // agent's link credited them with every order that browser placed for a
+  // month — including ones the customer clearly made on their own. Each order
+  // is now credited only to the link that produced it: the ref travels in the
+  // URL to checkout and is read there. See lib/referral.ts.
+  //
+  // The upshot is that an order with no ref on it counts for nobody, which is
+  // what "self serve" is supposed to mean.
+  return intlMiddleware(request);
 }
 
 export const config = {

@@ -7,7 +7,7 @@ import PricingCards from './PricingCards';
  * loads the admin-set USD prices, converting them before anything renders.
  * The interval toggle lives in PricingCards, which is the client half.
  */
-export default async function Pricing({ locale }: { locale: string }) {
+export default async function Pricing({ locale, referralTag = null }: { locale: string; referralTag?: string | null }) {
   const t = await getTranslations('plans');
   const pricing = await getPricing(locale);
 
@@ -18,7 +18,7 @@ export default async function Pricing({ locale }: { locale: string }) {
         <h2 className="reveal-item">{t('title')}</h2>
         <p className="section-lead reveal-item">{t('subtitle')}</p>
 
-        <PricingCards pricing={pricing} />
+        <PricingCards pricing={pricing} referralTag={referralTag} />
       </div>
     </section>
   );

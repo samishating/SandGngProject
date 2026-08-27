@@ -1,22 +1,26 @@
-import { cookies } from 'next/headers';
 import { prisma } from './prisma';
-import { REFERRAL_COOKIE } from './referral-constants';
-
-export { REFERRAL_COOKIE, REFERRAL_COOKIE_MAX_AGE } from './referral-constants';
 
 /**
- * Reads the referral cookie set by middleware.ts and resolves it to an
- * active tag + the salesperson it belongs to. Validated here (checkout
- * time, Node runtime), not in middleware, to avoid a DB round-trip on every
- * page view and to keep Prisma out of the Edge bundle.
+ * Resolves a referral tag to the salesperson who owns it.
+ *
+ * The tag comes from the ?ref= on the checkout the customer actually used, not
+ * from a stored cookie. That's the whole model: an order is credited to the
+ * link that produced it, and an order placed without one counts for nobody.
+ *
+ * A previous version parked the tag in a 30-day cookie, which meant a single
+ * visit to an agent's link credited them with every order that browser made
+ * for a month — including plainly self-serve ones. Per-order attribution is
+ * both easier to reason about and harder to argue with at payout time.
+ *
+ * Validated here rather than wherever the tag was picked up, so an inactive or
+ * unknown tag resolves to nobody instead of to a stale name.
  */
-export async function resolveReferral(): Promise<{ referralTagId: string; salespersonId: string } | null> {
-  const cookieStore = await cookies();
-  const tag = cookieStore.get(REFERRAL_COOKIE)?.value;
-  if (!tag) return null;
+export async function resolveReferral(tag: string | null | undefined): Promise<{ referralTagId: string; salespersonId: string } | null> {
+  const trimmed = tag?.trim();
+  if (!trimmed) return null;
 
   const referralTag = await prisma.referralTag.findFirst({
-    where: { tag: { equals: tag, mode: 'insensitive' }, isActive: true },
+    where: { tag: { equals: trimmed, mode: 'insensitive' }, isActive: true },
     select: { id: true, salespersonId: true },
   });
   if (!referralTag) return null;
