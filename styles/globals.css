@@ -514,6 +514,16 @@ h2 {
   color: var(--color-accent-2, var(--color-accent));
 }
 
+/* Sits under the admin nav for as long as test payments are enabled. Full
+   width and high contrast on purpose: it is the reminder that stops a fake
+   checkout surviving into launch. */
+.test-mode-banner {
+  padding: 10px 24px; font-size: 14px; line-height: 1.45;
+  background: color-mix(in srgb, var(--color-accent-2) 24%, var(--color-surface));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent-2) 50%, transparent);
+}
+.test-mode-banner code { font-size: 13px; }
+
 /* Simulated payment page. Deliberately does not look like a real checkout —
    the banner is the first thing read, and stays legible rather than decorous,
    because the one failure that matters here is someone believing it's real. */
