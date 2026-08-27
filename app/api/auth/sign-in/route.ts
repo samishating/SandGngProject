@@ -47,8 +47,16 @@ export async function POST(req: Request) {
   // know where to go next.
   const profile = await prisma.profile.findUnique({
     where: { email },
-    select: { role: true, mustChangePassword: true },
+    select: { role: true, mustChangePassword: true, isActive: true },
   });
+
+  // Someone who has been removed. Signed out again immediately rather than
+  // left holding a valid session, and told the same thing as a bad password
+  // so a former employee learns nothing from the difference.
+  if (profile && !profile.isActive) {
+    await supabase.auth.signOut();
+    return NextResponse.json({ error: "That didn't match an account. Check and try again." }, { status: 401 });
+  }
 
   const destination = profile?.mustChangePassword
     ? '/login/set-password'

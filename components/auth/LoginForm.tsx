@@ -84,6 +84,9 @@ export default function LoginForm() {
       {status === 'idle' && urlError === 'noprofile' && (
         <p className="card-body">That account isn&apos;t set up yet. Ask an admin to finish creating it.</p>
       )}
+      {status === 'idle' && urlError === 'inactive' && (
+        <p className="card-body">That account has been closed. Speak to an admin if you think that&apos;s wrong.</p>
+      )}
     </form>
   );
 }

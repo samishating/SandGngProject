@@ -91,3 +91,59 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ profile, referralTag, tempPassword: TEMP_PASSWORD });
 }
+
+/**
+ * DELETE /api/admin/salespeople?id=<profileId> — removes a salesperson.
+ *
+ * Someone with no sales is deleted outright: profile, referral tags,
+ * commission rules and the Supabase auth user, so the email and username are
+ * free again.
+ *
+ * Someone with sales is deactivated instead. Their commission history points
+ * at them by id, and deleting the row would leave payouts nobody can account
+ * for — the same reasoning as retiring a plan or a commission rule. Sign-in
+ * stops working immediately and their tags stop attributing, which is what
+ * "remove" actually needs to mean for someone who has left.
+ */
+export async function DELETE(req: Request) {
+  if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const id = new URL(req.url).searchParams.get('id');
+  if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 });
+
+  const profile = await prisma.profile.findUnique({ where: { id } });
+  if (!profile) return NextResponse.json({ error: 'No such account' }, { status: 404 });
+  if (profile.role !== 'SALESPERSON') {
+    return NextResponse.json({ error: 'This only removes salespeople' }, { status: 400 });
+  }
+
+  const saleCount = await prisma.sale.count({ where: { salespersonId: id } });
+  const supabaseAdmin = createAdminClient();
+
+  if (saleCount === 0) {
+    await prisma.commissionRule.deleteMany({ where: { salespersonId: id } });
+    await prisma.referralTag.deleteMany({ where: { salespersonId: id } });
+    await prisma.profile.delete({ where: { id } });
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
+    // The Profile is already gone; a lingering auth user only blocks reusing
+    // that email later, so it's worth reporting but not worth failing over.
+    return NextResponse.json({
+      outcome: 'deleted',
+      saleCount,
+      warning: error ? `Account removed, but the sign-in record could not be deleted: ${error.message}` : undefined,
+    });
+  }
+
+  await prisma.$transaction([
+    prisma.profile.update({ where: { id }, data: { isActive: false } }),
+    // Stops the tags crediting anyone, and takes them out of the link builder.
+    prisma.referralTag.updateMany({ where: { salespersonId: id }, data: { isActive: false } }),
+    prisma.commissionRule.updateMany({ where: { salespersonId: id, isActive: true }, data: { isActive: false, effectiveTo: new Date() } }),
+  ]);
+
+  // Belt and braces alongside the isActive check at sign-in: revoke the
+  // session so they're out now, not whenever their token expires.
+  await supabaseAdmin.auth.admin.updateUserById(id, { ban_duration: '876000h' });
+
+  return NextResponse.json({ outcome: 'deactivated', saleCount });
+}

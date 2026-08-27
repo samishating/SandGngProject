@@ -16,6 +16,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   // redirect to each other indefinitely.
   const profile = await prisma.profile.findUnique({ where: { id: user.id } });
   if (!profile) redirect('/login?error=noprofile');
+  // Removed while signed in — a live session shouldn't outlast the account.
+  if (!profile.isActive) redirect('/login?error=inactive');
   // See the matching note in app/admin/layout.tsx.
   if (profile.mustChangePassword) redirect('/login/set-password');
   if (profile.role !== 'SALESPERSON') redirect('/admin');

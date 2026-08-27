@@ -130,8 +130,8 @@ export default function LinkBuilder({ plans, tags, locales, defaultLocale }: Pro
         </tbody>
       </table>
       <p className="card-body" style={{ fontSize: 14, opacity: 0.8 }}>
-        Anyone opening one of these is tagged to you for 30 days, so an order they place later still counts even if they
-        don&apos;t buy on the first visit.
+        An order counts for you when it&apos;s placed from one of these links. Nothing is remembered afterwards, so if
+        someone comes back later and orders on their own, it won&apos;t be credited to you — send them the link again.
       </p>
     </div>
   );

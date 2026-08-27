@@ -78,6 +78,53 @@ export default function PlanEditor({ plan, locales }: { plan: PlanEditorPlan; lo
     setTranslations(prev => ({ ...prev, [locale]: { ...(prev[locale] ?? {}), [field]: value } }));
   }
 
+  const [translating, setTranslating] = useState(false);
+
+  /**
+   * Fills the translation fields from the English above. Deliberately does not
+   * save — machine translation of marketing copy wants a read-through before
+   * it goes on a pricing page, and this way a bad line can just be edited.
+   */
+  async function autoTranslate() {
+    setTranslating(true);
+    report('');
+
+    const res = await fetch('/api/admin/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source: { name, description, badge } }),
+    });
+    setTranslating(false);
+
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      report(body.error ?? 'Could not translate.', true);
+      return;
+    }
+
+    const body = (await res.json()) as {
+      translations: Record<string, Record<string, string>>;
+      failures: string[];
+    };
+
+    // Merged over what's there, so anything already written by hand for a
+    // locale is replaced only where a translation actually came back.
+    setTranslations(prev => {
+      const next = { ...prev };
+      for (const [locale, fields] of Object.entries(body.translations)) {
+        next[locale] = { ...(next[locale] ?? {}), ...fields };
+      }
+      return next;
+    });
+
+    report(
+      body.failures.length
+        ? `Filled in what came back — ${body.failures.length} failed. Check them, then Save wording.`
+        : 'Translations filled in. Read them over, then Save wording.',
+      body.failures.length > 0,
+    );
+  }
+
   async function removePlan() {
     const warning =
       plan.saleCount > 0
@@ -148,6 +195,16 @@ export default function PlanEditor({ plan, locales }: { plan: PlanEditorPlan; lo
               Translations — anything left blank falls back to the English above
             </summary>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 10 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary" type="button" onClick={autoTranslate} disabled={translating}>
+                  {translating ? 'Translating…' : 'Auto-translate from English'}
+                </button>
+                <span className="card-body" style={{ fontSize: 13, opacity: 0.75 }}>
+                  Machine translation — fills the boxes below for you to check, nothing is saved until you press Save
+                  wording.
+                </span>
+              </div>
+
               {locales.map(locale => (
                 <div key={locale} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <span className="card-kicker">{locale.toUpperCase()}</span>

@@ -85,6 +85,12 @@ model Profile {
   /// so it must stay in front of every authenticated page.
   mustChangePassword Boolean @default(true)
 
+  /// Someone who has left. Deactivating rather than deleting is what makes a
+  /// departure safe when the person has sales behind them: the commission
+  /// history keeps pointing at a real name instead of a null. Sign-in is
+  /// refused while this is false, and their referral tags stop attributing.
+  isActive Boolean @default(true)
+
   referralTags     ReferralTag[]
   commissionRules  CommissionRule[]
   sales            Sale[]
