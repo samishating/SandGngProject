@@ -46,7 +46,12 @@ function digitsOnly(value: string): string {
   return value.replace(/\D/g, '');
 }
 
-export async function findAccounts(rawQuery: string, salespersonId?: string): Promise<Account[]> {
+/**
+ * Anyone signed in can look up any customer. The salesperson on an order is a
+ * record of who handled the call, not an access boundary — an agent taking a
+ * call from someone else's customer still needs to see their history.
+ */
+export async function findAccounts(rawQuery: string): Promise<Account[]> {
   const query = rawQuery.trim();
   if (query.length < 2) return [];
 
@@ -64,13 +69,8 @@ export async function findAccounts(rawQuery: string, salespersonId?: string): Pr
   // doesn't matter — see the note on Sale.customerPhoneDigits.
   if (digits.length >= 4) conditions.push({ customerPhoneDigits: { contains: digits } });
 
-  // Agents only ever see their own customers; admins pass no id and see
-  // everyone. Applied to both queries below, so a missed check can't leak
-  // another agent's book.
-  const scope = salespersonId ? { salespersonId } : {};
-
   const hits = await prisma.sale.findMany({
-    where: { OR: conditions, ...scope },
+    where: { OR: conditions },
     select: { customerEmail: true, id: true },
     take: 200,
   });
@@ -85,7 +85,6 @@ export async function findAccounts(rawQuery: string, salespersonId?: string): Pr
 
   const matches = await prisma.sale.findMany({
     where: {
-      ...scope,
       OR: [
         ...(emails.length ? [{ customerEmail: { in: emails } }] : []),
         ...(orphanIds.length ? [{ id: { in: orphanIds } }] : []),
@@ -124,9 +123,13 @@ export async function findAccounts(rawQuery: string, salespersonId?: string): Pr
       isRecurring: s.plan.isRecurring,
     }));
 
+    // Period dates aren't required to count as the live subscription: a row
+    // that went ACTIVE before terms were recorded would otherwise report
+    // "no subscription" for a customer who plainly has one. The renewal date
+    // shows as unknown in that case, which is at least honest.
     const active = orders
-      .filter(o => o.status === 'ACTIVE' && o.isRecurring && o.periodStart)
-      .sort((a, b) => (b.periodStart!.getTime() ?? 0) - (a.periodStart!.getTime() ?? 0));
+      .filter(o => o.status === 'ACTIVE' && o.isRecurring)
+      .sort((a, b) => (b.periodStart ?? b.createdAt).getTime() - (a.periodStart ?? a.createdAt).getTime());
 
     // Only money that was actually sold counts. A lead still waiting on a
     // callback, or one that was cancelled, has paid nothing.

@@ -1,16 +1,18 @@
 // POST /api/orders — records a plan order placed from the checkout page.
 //
-// There is no payment processor yet, so this books the order and attributes
-// it to whichever salesperson's referral link brought the visitor in. The
-// sale is created APPROVED because everything is auto-approved while testing;
-// when PayPal lands, that flow sets APPROVED on payment success and this path
-// can create PENDING instead without any other change.
+// Books the order and attributes it to whichever salesperson's referral link
+// brought the visitor in, then decides whether it needs a human to close it.
+// The sale is created APPROVED because everything is auto-approved while
+// testing; when PayPal lands, that flow sets APPROVED on payment success and
+// this path can create PENDING instead without any other change.
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resolveReferral } from '@/lib/referral';
 import { resolveCommissionRule, calculateCommissionAmount } from '@/lib/commission';
 import { getPricing } from '@/lib/pricing';
 import { withUniqueReference } from '@/lib/order-reference';
+import { periodEndFor } from '@/lib/billing-period';
+import { testCheckoutEnabled } from '@/lib/test-checkout';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INTERVALS = new Set(['one_time', 'month', 'year']);
@@ -54,14 +56,29 @@ export async function POST(req: Request) {
 
   const referral = await resolveReferral();
 
+  // An order that came through a salesperson's link is theirs to close — it
+  // waits in their callback queue until they've spoken to the customer.
+  //
+  // A self-serve order has nobody to call, so it completes by itself. When
+  // exactly depends on whether the customer still has a payment step ahead of
+  // them: with one, the order is settled by the payment; without one, there is
+  // nothing left to wait for and it is done at checkout. Marking it done
+  // before a payment that is still to come would leave the pay page rejecting
+  // an order it had already settled.
+  const selfServe = !referral?.salespersonId;
+  const paymentStepAhead = testCheckoutEnabled();
+  const completesNow = selfServe && !paymentStepAhead;
+
+  const now = new Date();
+  const status = completesNow ? 'ACTIVE' : 'AWAITING_CALLBACK';
+
   const sale = await withUniqueReference(reference =>
     prisma.sale.create({
       data: {
         reference,
         planId: plan.id,
-        // Recorded so the subscription's end date can be worked out when an
-        // agent marks it sold — the plan alone doesn't say which term was
-        // bought.
+        // Recorded so the subscription's end date can be worked out — the plan
+        // alone doesn't say which term was bought.
         interval,
         referralTagId: referral?.referralTagId ?? null,
         salespersonId: referral?.salespersonId ?? null,
@@ -70,9 +87,13 @@ export async function POST(req: Request) {
         amountUsd: priced.amountUsd,
         provider: 'MANUAL',
         approval: 'APPROVED',
-        // Nothing is sold until an agent has called and taken payment, so an
-        // order starts in the callback queue rather than counting as running.
-        status: 'AWAITING_CALLBACK',
+        status,
+        // Only a self-serve order has a term from the outset. A referred one
+        // gets its dates when the agent marks it Sold, so a lead that sits in
+        // the queue for days doesn't lose days the customer paid for.
+        periodStart: completesNow ? now : null,
+        periodEnd: completesNow ? periodEndFor(now, interval) : null,
+        calledBackAt: completesNow ? now : null,
         customerName: name,
         customerPhone: phone,
         // Digits kept alongside so the account finder can match a number
