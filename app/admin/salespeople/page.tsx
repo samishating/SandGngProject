@@ -67,15 +67,24 @@ export default async function AdminSalespeoplePage() {
                         ))}
                   </td>
                   <td>{sp._count.sales}</td>
-                  <td style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                    <Link href={`/admin/salespeople/${sp.id}`}>Manage</Link>
-                    {sp.isActive && (
-                      <RemoveSalesperson
-                        id={sp.id}
-                        name={sp.displayName ?? sp.email}
-                        saleCount={sp._count.sales}
-                      />
-                    )}
+                  {/* The actions live in a wrapper, not on the td itself:
+                      making the cell a flex container drops it out of the
+                      row's shared baseline and it stops lining up with the
+                      other columns. */}
+                  <td>
+                    <div className="row-actions">
+                      <Link className="btn btn-secondary btn-sm" href={`/admin/salespeople/${sp.id}`}>
+                        Manage
+                      </Link>
+                      {sp.isActive && (
+                        <RemoveSalesperson
+                          id={sp.id}
+                          name={sp.displayName ?? sp.email}
+                          saleCount={sp._count.sales}
+                          tagCount={sp.referralTags.length}
+                        />
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
