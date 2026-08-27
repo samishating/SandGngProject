@@ -17,6 +17,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { createClient } from '@supabase/supabase-js';
 import { TEMP_PASSWORD } from '../lib/auth-constants';
+import { suggestUsernameFromEmail } from '../lib/username';
 
 // Wrapped in a function so the validated result is plainly `string` at every
 // later use, including inside the async helpers below.
@@ -80,14 +81,30 @@ async function main() {
     console.log(`Created Supabase auth user ${authUser.id}`);
   }
 
+  // A handle to sign in with, so the full address isn't needed every time.
+  // Only claimed if free — an existing owner keeps it.
+  const suggested = suggestUsernameFromEmail(email);
+  const taken = suggested
+    ? await prisma.profile.findFirst({ where: { username: suggested, NOT: { id: authUser.id } }, select: { id: true } })
+    : null;
+  const username = suggested && !taken ? suggested : undefined;
+
   const profile = await prisma.profile.upsert({
     where: { id: authUser.id },
-    update: { email, role: 'ADMIN', mustChangePassword: true, ...(displayName ? { displayName } : {}) },
-    create: { id: authUser.id, email, role: 'ADMIN', mustChangePassword: true, displayName: displayName ?? null },
+    update: { email, role: 'ADMIN', mustChangePassword: true, ...(username ? { username } : {}), ...(displayName ? { displayName } : {}) },
+    create: {
+      id: authUser.id,
+      email,
+      role: 'ADMIN',
+      mustChangePassword: true,
+      username: username ?? null,
+      displayName: displayName ?? null,
+    },
   });
 
   console.log(`\nAdmin ready:`);
   console.log(`  email     ${profile.email}`);
+  console.log(`  username  ${profile.username ?? '(none — sign in with the email)'}`);
   console.log(`  password  ${TEMP_PASSWORD}   (temporary — must be changed at first sign-in)`);
   console.log(`  role      ${profile.role}`);
   console.log(`  id        ${profile.id}`);

@@ -590,6 +590,7 @@ h2 {
    has. Staff screens have no such menu, so their links must survive every
    width — otherwise an agent on a phone gets no navigation at all. */
 .staff-nav .nav-links { display: flex !important; flex-wrap: wrap; gap: 18px; }
+.staff-nav-actions { display: flex; align-items: center; gap: 8px; flex: none; }
 @media (max-width: 560px) {
   .staff-nav .nav-inner { flex-wrap: wrap; gap: 10px; }
   .staff-nav .nav-links { gap: 14px; width: 100%; order: 3; }

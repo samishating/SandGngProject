@@ -35,9 +35,15 @@ export default function DashboardNav({ waitingCount }: { waitingCount: number })
             )}
           </Link>
         </nav>
-        <button className="btn btn-secondary" onClick={signOut} type="button">
-          Sign out
-        </button>
+        <div className="staff-nav-actions">
+          {/* See the matching note in AdminNav. */}
+          <a className="btn btn-ghost" href="/" target="_blank" rel="noopener noreferrer">
+            View site ↗
+          </a>
+          <button className="btn btn-secondary" onClick={signOut} type="button">
+            Sign out
+          </button>
+        </div>
       </div>
     </header>
   );

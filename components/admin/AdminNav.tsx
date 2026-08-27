@@ -24,9 +24,17 @@ export default function AdminNav() {
           <Link href="/admin/salespeople">Salespeople</Link>
           <Link href="/admin/sales">Sales</Link>
         </nav>
-        <button className="btn btn-secondary" onClick={signOut} type="button">
-          Sign out
-        </button>
+        <div className="staff-nav-actions">
+          {/* Opens in a new tab so a quick look at the public site doesn't
+              cost you the page you were working on. "/" lets the locale
+              middleware pick the language rather than hardcoding one. */}
+          <a className="btn btn-ghost" href="/" target="_blank" rel="noopener noreferrer">
+            View site ↗
+          </a>
+          <button className="btn btn-secondary" onClick={signOut} type="button">
+            Sign out
+          </button>
+        </div>
       </div>
     </header>
   );

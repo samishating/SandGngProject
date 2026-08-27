@@ -65,8 +65,14 @@ enum SaleEventType {
 /// id matches Supabase auth.users.id (uuid); created alongside the Supabase
 /// invite (see lib/supabase/admin.ts) — no cross-schema Prisma FK to auth.users.
 model Profile {
-  id          String   @id
-  email       String   @unique
+  id    String @id
+  email String @unique
+
+  /// Short handle for signing in, so staff don't retype a full email every
+  /// time. Stored lowercase; the login route resolves it to the email before
+  /// handing off to Supabase, which only knows about addresses.
+  username String? @unique
+
   role        Role
   displayName String?
   createdAt   DateTime @default(now())

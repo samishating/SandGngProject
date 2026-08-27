@@ -2,50 +2,65 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 
 type Status = 'idle' | 'submitting' | 'error';
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') || '/dashboard';
+  const next = searchParams.get('next');
   const urlError = searchParams.get('error');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [status, setStatus] = useState<Status>('idle');
+  const [message, setMessage] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus('submitting');
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
+
+    // Signed in server-side so a username can be resolved to an email without
+    // exposing that mapping to the browser — see /api/auth/sign-in.
+    const res = await fetch('/api/auth/sign-in', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, password }),
+    });
+
+    if (!res.ok) {
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       setStatus('error');
+      setMessage(body.error ?? "That didn't match an account. Check and try again.");
       return;
     }
-    // Where to actually land is decided server-side: the layouts redirect to
-    // /login/set-password while the temporary password is still in use, and
-    // bounce between /admin and /dashboard by role. refresh() is what lets
-    // those server components see the session cookie that was just set.
-    router.replace(next);
+
+    // Where to land is decided by the server, which knows the role and whether
+    // the temporary password is still in use. An explicit ?next= wins, but the
+    // layouts still gate it.
+    const { destination } = (await res.json()) as { destination?: string };
+    router.replace(next || destination || '/dashboard');
     router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <label className="visually-hidden" htmlFor="loginEmail">
-        Email address
+      <label className="visually-hidden" htmlFor="loginIdentifier">
+        Username or email address
       </label>
       <input
         className="input"
-        id="loginEmail"
-        type="email"
+        id="loginIdentifier"
+        type="text"
         required
-        placeholder="you@example.com"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        autoComplete="email"
+        placeholder="Username or email"
+        value={identifier}
+        onChange={e => setIdentifier(e.target.value)}
+        // "username" rather than "email": the field accepts either, and
+        // password managers offer the saved handle for it.
+        autoComplete="username"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
       />
       <label className="visually-hidden" htmlFor="loginPassword">
         Password
@@ -63,9 +78,9 @@ export default function LoginForm() {
       <button className="btn btn-primary" type="submit" disabled={status === 'submitting'}>
         {status === 'submitting' ? 'Signing in…' : 'Sign in'}
       </button>
-      {/* Deliberately does not distinguish "no such account" from "wrong
+      {/* Deliberately doesn't distinguish "no such account" from "wrong
           password" — this page is reachable by anyone who guesses the URL. */}
-      {status === 'error' && <p className="card-body">That email and password don&apos;t match. Try again.</p>}
+      {status === 'error' && <p className="card-body">{message}</p>}
       {status === 'idle' && urlError === 'noprofile' && (
         <p className="card-body">That account isn&apos;t set up yet. Ask an admin to finish creating it.</p>
       )}

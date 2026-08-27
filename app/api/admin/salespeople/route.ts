@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { prisma } from '@/lib/prisma';
 import { TEMP_PASSWORD } from '@/lib/auth-constants';
+import { isValidUsername, normalizeUsername, suggestUsernameFromEmail } from '@/lib/username';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TAG_RE = /^[a-z0-9-]{3,32}$/;
@@ -45,6 +46,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'That referral tag is already taken' }, { status: 409 });
   }
 
+  // A sign-in handle, so the salesperson doesn't retype their address daily.
+  // Explicit if given, otherwise derived from the email; either way it's only
+  // used when free, since it has to be unique across everyone.
+  const requested = typeof body.username === 'string' && body.username.trim() ? normalizeUsername(body.username) : null;
+  if (requested && !isValidUsername(requested)) {
+    return NextResponse.json(
+      { error: 'Username must be 3-30 characters: lowercase letters, numbers, dots, underscores or hyphens' },
+      { status: 400 },
+    );
+  }
+  const candidate = requested ?? suggestUsernameFromEmail(email);
+  if (requested && (await prisma.profile.findUnique({ where: { username: requested }, select: { id: true } }))) {
+    return NextResponse.json({ error: 'That username is already taken' }, { status: 409 });
+  }
+  const username =
+    candidate && !(await prisma.profile.findUnique({ where: { username: candidate }, select: { id: true } }))
+      ? candidate
+      : null;
+
   // Created outright with the shared temporary password rather than emailed an
   // invite: Supabase's built-in SMTP rate-limits at a few sends an hour, so
   // invites silently failed to arrive. The admin passes the password on
@@ -61,8 +81,8 @@ export async function POST(req: Request) {
 
   const profile = await prisma.profile.upsert({
     where: { id: data.user.id },
-    update: { role: 'SALESPERSON', displayName, email, mustChangePassword: true },
-    create: { id: data.user.id, role: 'SALESPERSON', displayName, email, mustChangePassword: true },
+    update: { role: 'SALESPERSON', displayName, email, mustChangePassword: true, ...(username ? { username } : {}) },
+    create: { id: data.user.id, role: 'SALESPERSON', displayName, email, mustChangePassword: true, username },
   });
 
   const referralTag = await prisma.referralTag.create({
