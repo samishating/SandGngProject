@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { testCheckoutEnabled } from '@/lib/test-checkout';
 
@@ -20,9 +21,15 @@ type Status = 'idle' | 'submitting' | 'done' | 'error';
  */
 export default function CheckoutForm({ planKey, interval, locale }: Props) {
   const t = useTranslations('checkout');
+  const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
   const [reference, setReference] = useState('');
+
+  // Paying by card is only on offer when there is actually a payment step to
+  // send people to. Without one the only honest option is a callback.
+  const canPayNow = testCheckoutEnabled();
+  const [method, setMethod] = useState<'card' | 'callback'>(canPayNow ? 'card' : 'callback');
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,7 +59,16 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
     }
 
     const body = (await res.json()) as { reference?: string };
-    setReference(body.reference ?? '');
+    const ref = body.reference ?? '';
+
+    // Straight on to the card page when they chose to pay — showing a
+    // "we'll call you" confirmation first would contradict what they picked.
+    if (method === 'card' && canPayNow && ref) {
+      router.push(`/${locale}/checkout/pay?ref=${ref}`);
+      return;
+    }
+
+    setReference(ref);
     setStatus('done');
   }
 
@@ -68,11 +84,11 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
           </>
         )}
         <span className="card-body">{t('successBody')}</span>
-        {/* Only rendered while the payment simulator is switched on. Not
-            translated: it is a development affordance, never customer-facing. */}
-        {testCheckoutEnabled() && reference && (
+        {/* They chose a callback, but the option to pay now is still there —
+            people change their mind once the order is real. */}
+        {canPayNow && reference && (
           <Link className="btn btn-secondary" href={`/checkout/pay?ref=${reference}`}>
-            Continue to test payment
+            {t('payNowInstead')}
           </Link>
         )}
       </div>
@@ -81,6 +97,26 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {canPayNow && (
+        <fieldset className="pay-choice">
+          <legend className="card-kicker">{t('methodLegend')}</legend>
+          <label className={`pay-choice-opt ${method === 'card' ? 'is-selected' : ''}`}>
+            <input type="radio" name="method" checked={method === 'card'} onChange={() => setMethod('card')} />
+            <span>
+              <strong>{t('methodCard')}</strong>
+              <small>{t('methodCardHint')}</small>
+            </span>
+          </label>
+          <label className={`pay-choice-opt ${method === 'callback' ? 'is-selected' : ''}`}>
+            <input type="radio" name="method" checked={method === 'callback'} onChange={() => setMethod('callback')} />
+            <span>
+              <strong>{t('methodCallback')}</strong>
+              <small>{t('methodCallbackHint')}</small>
+            </span>
+          </label>
+        </fieldset>
+      )}
+
       <label className="visually-hidden" htmlFor="orderName">
         {t('namePlaceholder')}
       </label>
@@ -112,10 +148,14 @@ export default function CheckoutForm({ planKey, interval, locale }: Props) {
       />
 
       <button className="btn btn-primary btn-block" type="submit" disabled={status === 'submitting'}>
-        {status === 'submitting' ? t('submitting') : t('submit')}
+        {status === 'submitting'
+          ? t('submitting')
+          : method === 'card' && canPayNow
+            ? t('submitCard')
+            : t('submit')}
       </button>
       <span className="card-body" style={{ fontSize: 14, opacity: 0.8 }}>
-        {t('reassurance')}
+        {method === 'card' && canPayNow ? t('reassuranceCard') : t('reassurance')}
       </span>
       {status === 'error' && <p className="card-body">{message}</p>}
     </form>

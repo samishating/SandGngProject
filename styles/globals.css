@@ -524,10 +524,19 @@ h2 {
 }
 .test-mode-banner code { font-size: 13px; }
 
-/* Simulated payment page. Deliberately does not look like a real checkout —
-   the banner is the first thing read, and stays legible rather than decorous,
-   because the one failure that matters here is someone believing it's real. */
-.test-pay-card { padding: 26px; display: flex; flex-direction: column; gap: 16px; }
+/* Card payment page. It reads like a real checkout because the flow is the
+   point — but the banner stays first and legible, since the one failure that
+   matters is someone believing money moved when it didn't. */
+.pay-layout {
+  display: grid; grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 24px; align-items: start; margin-top: 24px;
+}
+@media (max-width: 760px) { .pay-layout { grid-template-columns: 1fr; } }
+
+.pay-summary { padding: 22px; display: flex; flex-direction: column; gap: 6px; }
+.pay-panel { padding: 26px; display: flex; flex-direction: column; gap: 16px; }
+.pay-field { display: flex; flex-direction: column; gap: 5px; }
+
 .test-pay-banner {
   display: flex; flex-direction: column; gap: 4px;
   padding: 12px 16px; border-radius: var(--radius-block);
@@ -535,9 +544,53 @@ h2 {
   border: 1px solid color-mix(in srgb, var(--color-accent-2) 45%, transparent);
   font-size: 14px;
 }
-.test-pay-amount { display: flex; flex-direction: column; gap: 2px; }
-.test-pay-field { display: flex; flex-direction: column; gap: 5px; }
 .test-pay-error { color: #b3261e; }
+
+/* The card itself. Mirrors what's typed so the page reads as a card checkout
+   rather than four more text inputs. */
+.card-visual {
+  position: relative; aspect-ratio: 1.586; max-width: 380px; width: 100%;
+  border-radius: var(--radius-block); padding: 20px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  color: #fdf6ec;
+  background:
+    radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--color-accent) 85%, #000) 0%, transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-accent-2) 70%, #2c1a12) 0%, #2c1a12 100%);
+  box-shadow: var(--shadow-lg);
+}
+.card-visual-chip {
+  width: 42px; height: 32px; border-radius: 6px;
+  background: linear-gradient(135deg, #e8c98a, #b8933f);
+}
+.card-visual-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(17px, 4.4vw, 22px); letter-spacing: 0.08em;
+}
+.card-visual-row { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; letter-spacing: 0.04em; }
+.card-visual-row span { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.card-visual-row small { font-size: 10px; text-transform: uppercase; opacity: 0.65; letter-spacing: 0.1em; }
+
+/* Confirmation tick on the paid screen. */
+.pay-tick {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--color-accent-2); color: #fff; font-size: 22px; font-weight: 700;
+}
+
+/* Pay now vs. callback. Whole rows are clickable, not just the radios. */
+.pay-choice { border: 0; padding: 0; margin: 0 0 4px; display: flex; flex-direction: column; gap: 8px; }
+.pay-choice legend { padding: 0; margin-bottom: 4px; }
+.pay-choice-opt {
+  display: flex; align-items: flex-start; gap: 10px; cursor: pointer;
+  padding: 12px 14px; border-radius: var(--radius-block);
+  border: 1px solid var(--color-divider); background: var(--color-surface);
+}
+.pay-choice-opt.is-selected {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface));
+}
+.pay-choice-opt input { margin-top: 3px; accent-color: var(--color-accent); flex: none; }
+.pay-choice-opt span { display: flex; flex-direction: column; gap: 2px; }
+.pay-choice-opt small { font-size: 13px; opacity: 0.75; }
 
 /* Account finder. The search box is the reason the page exists, so it gets
    real size rather than sitting in a row of equal-weight fields. */

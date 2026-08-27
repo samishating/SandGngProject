@@ -33,11 +33,18 @@ export default async function TestPaymentPage({ params, searchParams }: Props) {
   if (!sale) notFound();
 
   const currency = isCurrency(sale.currency) ? sale.currency : 'usd';
+  const period =
+    sale.interval === 'one_time' ? 'One-time payment' : sale.interval === 'year' ? 'Billed yearly' : 'Billed monthly';
 
   return (
-    <section className="section" aria-label="Test payment">
-      <div className="container" style={{ maxWidth: 520 }}>
-        <TestPaymentForm reference={sale.reference} amount={formatMoney(sale.amount, currency, locale)} />
+    <section className="section" aria-label="Payment">
+      <div className="container" style={{ maxWidth: 880 }}>
+        <TestPaymentForm
+          reference={sale.reference}
+          amount={formatMoney(sale.amount, currency, locale)}
+          planName={sale.plan.name}
+          period={period}
+        />
       </div>
     </section>
   );

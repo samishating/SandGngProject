@@ -7,31 +7,56 @@ import { TEST_CARD_NUMBER, isTestCard } from '@/lib/test-checkout';
 type Status = 'idle' | 'paying' | 'paid' | 'error';
 
 /**
- * A payment form that takes no payment.
+ * A card payment page that takes no payment.
  *
- * The card number is validated in the browser and then thrown away — the
- * request to the server carries only the order reference. Nothing about a
- * card is transmitted, logged or stored anywhere, which is the only reason a
- * form shaped like this is acceptable to have in the codebase at all.
+ * It looks like a card form because the point is to see the real flow, but
+ * nothing about a card is transmitted, logged or stored — the request to the
+ * server carries only the order reference. That is the only reason a form
+ * shaped like this belongs in the codebase at all.
  *
- * Only the standard test PAN is accepted. A real card typed in by mistake is
- * refused rather than quietly appearing to work, so nobody can come away
- * believing they paid.
+ * Only the standard test PAN is accepted, so a real card typed in by mistake
+ * is refused rather than appearing to work and leaving someone believing they
+ * have paid.
  */
-export default function TestPaymentForm({ reference, amount }: { reference: string; amount: string }) {
+export default function TestPaymentForm({
+  reference,
+  amount,
+  planName,
+  period,
+}: {
+  reference: string;
+  amount: string;
+  planName: string;
+  period: string;
+}) {
   const [card, setCard] = useState(TEST_CARD_NUMBER);
-  const [expiry, setExpiry] = useState('12 / 30');
+  const [holder, setHolder] = useState('');
+  const [expiry, setExpiry] = useState('12/30');
   const [cvc, setCvc] = useState('123');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
   const [paidUntil, setPaidUntil] = useState<string | null>(null);
+
+  /** Groups digits in fours as they're typed, the way a card reads. */
+  function onCardChange(raw: string) {
+    const digits = raw.replace(/\D/g, '').slice(0, 19);
+    setCard(digits.replace(/(.{4})/g, '$1 ').trim());
+    setStatus('idle');
+  }
+
+  function onExpiryChange(raw: string) {
+    const digits = raw.replace(/\D/g, '').slice(0, 4);
+    setExpiry(digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!isTestCard(card)) {
       setStatus('error');
-      setMessage(`This is a simulator, not a real checkout. Only the test card ${TEST_CARD_NUMBER} is accepted — never enter a real card number here.`);
+      setMessage(
+        `This is a demo checkout, not a real one. Only the test card ${TEST_CARD_NUMBER} is accepted — never enter a real card number here.`,
+      );
       return;
     }
 
@@ -49,7 +74,7 @@ export default function TestPaymentForm({ reference, amount }: { reference: stri
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       setStatus('error');
-      setMessage(body.error ?? 'The simulated payment failed.');
+      setMessage(body.error ?? 'The demo payment failed.');
       return;
     }
 
@@ -60,11 +85,17 @@ export default function TestPaymentForm({ reference, amount }: { reference: stri
 
   if (status === 'paid') {
     return (
-      <div className="card elev-sm test-pay-card">
-        <span className="card-title">Payment simulated</span>
+      <div className="card elev-md pay-panel">
+        <span className="pay-tick" aria-hidden="true">
+          ✓
+        </span>
+        <span className="card-title">Payment complete</span>
         <p className="card-body">
-          Order <code>{reference}</code> is now active{paidUntil ? `, running to ${paidUntil}` : ''}. It has left the
-          callback queue and its commission has been recorded — check the admin overview and the agent&apos;s dashboard.
+          Order <code>{reference}</code> is active{paidUntil ? `, running to ${paidUntil}` : ''}. A technician will be in
+          touch to get you set up.
+        </p>
+        <p className="card-body" style={{ fontSize: 13, opacity: 0.75 }}>
+          Demo mode — no money changed hands.
         </p>
         <Link className="btn btn-secondary" href="/pricing">
           Back to plans
@@ -74,38 +105,99 @@ export default function TestPaymentForm({ reference, amount }: { reference: stri
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card elev-sm test-pay-card">
-      <div className="test-pay-banner" role="status">
-        <strong>Test mode — no payment is taken</strong>
-        <span>This page is a simulator for checking the order flow. Never enter a real card number.</span>
-      </div>
-
-      <div className="test-pay-amount">
+    <div className="pay-layout">
+      <div className="card elev-sm pay-summary">
         <span className="card-kicker">Order {reference}</span>
+        <span className="card-title">{planName}</span>
         <span className="plan-price">{amount}</span>
+        <span className="plan-note">{period}</span>
       </div>
 
-      <label className="test-pay-field">
-        <span className="card-kicker">Card number</span>
-        <input className="input" value={card} onChange={e => setCard(e.target.value)} inputMode="numeric" autoComplete="off" />
-      </label>
+      <form onSubmit={handleSubmit} className="card elev-md pay-panel">
+        <div className="test-pay-banner" role="status">
+          <strong>Demo checkout — no payment is taken</strong>
+          <span>
+            Use the test card <code>{TEST_CARD_NUMBER}</code>. Never enter a real card number.
+          </span>
+        </div>
 
-      <div className="field-row">
-        <label className="test-pay-field">
-          <span className="card-kicker">Expiry</span>
-          <input className="input" value={expiry} onChange={e => setExpiry(e.target.value)} autoComplete="off" style={{ width: 120 }} />
+        {/* Mirrors what's typed, so the page reads as a card checkout rather
+            than a form. Purely decorative — the values live in state above. */}
+        <div className="card-visual" aria-hidden="true">
+          <span className="card-visual-chip" />
+          <span className="card-visual-number">{card || '•••• •••• •••• ••••'}</span>
+          <div className="card-visual-row">
+            <span>
+              <small>Card holder</small>
+              {holder || 'YOUR NAME'}
+            </span>
+            <span>
+              <small>Expires</small>
+              {expiry || 'MM/YY'}
+            </span>
+          </div>
+        </div>
+
+        <label className="pay-field">
+          <span className="card-kicker">Card number</span>
+          <input
+            className="input"
+            value={card}
+            onChange={e => onCardChange(e.target.value)}
+            inputMode="numeric"
+            autoComplete="off"
+            placeholder="4242 4242 4242 4242"
+          />
         </label>
-        <label className="test-pay-field">
-          <span className="card-kicker">CVC</span>
-          <input className="input" value={cvc} onChange={e => setCvc(e.target.value)} autoComplete="off" style={{ width: 100 }} />
+
+        <label className="pay-field">
+          <span className="card-kicker">Name on card</span>
+          <input
+            className="input"
+            value={holder}
+            onChange={e => setHolder(e.target.value.toUpperCase())}
+            autoComplete="off"
+            placeholder="A. TECHNICIAN"
+          />
         </label>
-      </div>
 
-      <button className="btn btn-primary btn-block" type="submit" disabled={status === 'paying'}>
-        {status === 'paying' ? 'Processing…' : `Pay ${amount} (simulated)`}
-      </button>
+        <div className="field-row">
+          <label className="pay-field">
+            <span className="card-kicker">Expiry</span>
+            <input
+              className="input"
+              value={expiry}
+              onChange={e => onExpiryChange(e.target.value)}
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="MM/YY"
+              style={{ width: 120 }}
+            />
+          </label>
+          <label className="pay-field">
+            <span className="card-kicker">CVC</span>
+            <input
+              className="input"
+              value={cvc}
+              onChange={e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="123"
+              style={{ width: 100 }}
+            />
+          </label>
+        </div>
 
-      {status === 'error' && <p className="card-body test-pay-error">{message}</p>}
-    </form>
+        <button className="btn btn-primary btn-block" type="submit" disabled={status === 'paying'}>
+          {status === 'paying' ? 'Processing…' : `Pay ${amount}`}
+        </button>
+
+        {status === 'error' && <p className="card-body test-pay-error">{message}</p>}
+
+        <Link className="btn btn-ghost btn-block" href="/#callback">
+          Rather have someone call you instead?
+        </Link>
+      </form>
+    </div>
   );
 }
